@@ -1,9 +1,11 @@
 import dnsmasq
 
-dnsmasq_conf = dnsmasq.config(conf_file='dnsmasq/configs/test_config1.conf')
+#dnsmasq_conf = dnsmasq.config(conf_file='dnsmasq/configs/test_config1.conf')
+#dnsmasq_conf = dnsmasq.config()
 
-dnsmasq_conf['test'] = ['this']
+dns_dhcp = dnsmasq.DNSMasq("dnsmasq/configs/test_config1.conf")
 
-for key in dnsmasq_conf.keys():
-    print(f'{ key } : { dnsmasq_conf[key] }')
+print(dns_dhcp["dhcp-host"])
 
+dns_dhcp.write()
+dns_dhcp.write(dns_dhcp.conf_files[0])

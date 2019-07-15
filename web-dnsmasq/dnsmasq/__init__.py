@@ -1,3 +1,3 @@
-__all__ = ['config']
+__all__ = ['DNSMasq']
 
-from .dnsmasq import config
+from .dnsmasq import DNSMasq
