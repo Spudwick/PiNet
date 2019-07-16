@@ -29,7 +29,7 @@ class DNSMasq():
 			self.conf_files = []
 			path = self.root_conf
 
-		file = conf_file(path)
+		file = DNSMasq_conf(path)
 		self.conf_files.append(file)
 
 		if "conf-file" in file:
@@ -51,7 +51,7 @@ class DNSMasq():
 
 
 
-class conf_file():
+class DNSMasq_conf():
 	def __init__(self, path):
 		self.path = os.path.abspath(path)
 		self.options = {}

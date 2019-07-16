@@ -1,3 +1,3 @@
-__all__ = ['DNSMasq']
+__all__ = ['DNSMasq_file']
 
-from .dnsmasq import DNSMasq
+from .dnsmasq2 import DNSMasq_file
