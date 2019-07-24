@@ -203,7 +203,7 @@ class DNSMasq_file():
 
 		self.parse()
 
-	def parse(self):		
+	def parse(self):
 		self.updated = 0
 		
 		with open(self.path,"r") as fp:
@@ -221,6 +221,20 @@ class DNSMasq_file():
 			self.lines.append(option)
 		else:
 			self.lines.append([option, ",".join(value)])
+
+	def pop(self,option,idx):
+		match = ",".join(self[option][idx])
+		for idx,element in enumerate(self.lines):
+			if len(element) > 1:
+				if element[1] == match:
+					print(f'Line match with { element[1] }')
+					self.lines.pop(idx)
+					break
+			else:
+				if element[0] == match:
+					print(f'Switch match with { element[0] }')
+					self.lines.pop(idx)
+					break
 
 	def write(self,path=None):
 		if path == None:
