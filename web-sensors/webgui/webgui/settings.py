@@ -55,7 +55,7 @@ ROOT_URLCONF = 'webgui.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'sensors/templates/sensors')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
