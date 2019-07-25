@@ -1,54 +1,100 @@
 {% extends "sensors/base.html" %}
 
-{% block title_text %}Pi-Sensors{% endblock %}
+
+{% block title_text %}Dashboard{% endblock %}
+
 
 {% block page_css %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.css" crossorigin="anonymous">
+
 {% endblock %}
+
 
 {% block body_content %}
-<div class="container-fluid">
-	<div class="row no-gutters">
-		{% for i in charts %}
-			<div class="col-12 col-lg-4">
-				<canvas id="chartjs-{{ i }}" class="chartjs" width="423" height="211" style="display: block; height: 169px; width: 339px;"></canvas>
+
+<div class="accordion" id="accordionExample">
+	{% for pair in data %}
+	<div class="card">
+		<div class="card-header" id="heading{{ pair.node.node_id }}">
+			<h2 class="mb-0">
+				<button class="btn btn-link" type="button" data-toggle="collapse"
+					data-target="#collapse{{ pair.node.node_id }}" aria-expanded="true"
+					aria-controls="collapse{{ pair.node.node_id }}">
+					{{ pair.node.location }} (Node {{ pair.node.node_id }})
+				</button>
+			</h2>
+		</div>
+
+		<div id="collapse{{ pair.node.node_id }}" class="collapse" aria-labelledby="heading{{ pair.node.node_id }}"
+			data-parent="#accordionExample">
+			<div class="card-body">
+				<canvas id="chartjs-{{ pair.node.node_id }}" class="chartjs" width="423" height="211"
+					style="display: block; height: 169px; width: 339px;"></canvas>
 			</div>
-		{% endfor %}
+		</div>
 	</div>
+	{% endfor %}
 </div>
+
+<canvas id="canvas" style="display: block; width: 468px; height: 234px;" width="468" height="234"
+	class="chartjs-render-monitor"></canvas>
+
 {% endblock %}
 
-{% block page_scripts %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" crossorigin="anonymous"></script>
 
-{% for i in charts %}
+{% block page_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js" crossorigin=" anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.min.js" crossorigin="anonymous"></script>
+
+{% for pair in data %}
 <script>
-new Chart(document.getElementById("chartjs-{{ i }}"), {
-    type: 'scatter',
-    data: {
-        datasets: [{
-			label: 'Temperature',
-			showLine: true,
-			fill: false,
-			borderColor: 'rgba(255, 0, 0, 0.5)',
-            data: [{
-                x:-10, y:0
-            }, {
-                x:0, y:10
-            }, {
-                x:10, y:5
-            }]
-        }]
-    },
-    options: {
-        scales: {
-            xAxes: [{
-                type: 'linear',
-                position: 'bottom'
-            }]
-        }
-    }
-});
+	new Chart(document.getElementById("chartjs-{{ pair.node.node_id }}"), {
+		type: 'line',
+		data: {
+			datasets: [{
+				label: 'Temperature',
+				showLine: true,
+				fill: false,
+				borderColor: 'rgba(255, 0, 0, 0.5)',
+				data: [{
+					x: moment().add(1, 'd').format(), y: 0
+				}, {
+					x: moment().add(4, 'd').format(), y: 10
+				}, {
+					x: moment().add(5, 'd').format(), y: 5
+				}]
+			}]
+		},
+		options: {
+			responsive: true,
+			title: {
+				display: false,
+				text: 'Node Readings'
+			},
+			scales: {
+				xAxes: [{
+					type: 'time',
+					display: true,
+					scaleLabel: {
+						display: true,
+						labelString: 'Date'
+					},
+					ticks: {
+						major: {
+							fontStyle: 'bold',
+							fontColor: '#FF0000'
+						}
+					}
+				}],
+				yAxes: [{
+					display: true,
+					scaleLabel: {
+						display: true,
+						labelString: 'value'
+					}
+				}]
+			}
+		}
+	});
 </script>
 {% endfor %}
 {% endblock %}
