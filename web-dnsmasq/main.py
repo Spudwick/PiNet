@@ -1,9 +1,14 @@
 import PyDNSMasq
 
-dnsmasq = PyDNSMasq.DNSMasq("C:\\Users\\TO01\\Documents\\GitHub\\PiNet\\web-dnsmasq\\PyDNSMasq\\configs\\test_config1.conf","C:\\Users\\TO01\\Documents\\GitHub\\PiNet\\web-dnsmasq\\PyDNSMasq\\leases\\dnsmasq.leases")
+#dnsmasq = PyDNSMasq.DNSMasq("C:\\Users\\TO01\\Documents\\GitHub\\PiNet\\web-dnsmasq\\PyDNSMasq\\configs\\test_config1.conf","C:\\Users\\TO01\\Documents\\GitHub\\PiNet\\web-dnsmasq\\PyDNSMasq\\leases\\dnsmasq.leases")
 
-dnsmasq.start()
+conf = PyDNSMasq.DNSMasq_file("PyDNSMasq/configs/test_config1.conf")
 
-print(dnsmasq.tohost("192.168.10.109"))
-print(dnsmasq.tohost("172.20.150.91"))
-print(dnsmasq.tohost(mac="45:fd:6e:34:12:45"))
+conf.add("dhcp-host",["rpi1", "192.168.10.10"])
+conf.pop("dhcp-host", 2)
+
+for line in conf.lines:
+    if len(line) > 1:
+        print(f'{ line[0] } : { line[1] }')
+    else:
+        print(f'{ line[0] }')
