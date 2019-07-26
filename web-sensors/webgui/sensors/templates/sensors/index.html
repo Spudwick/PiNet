@@ -12,31 +12,28 @@
 {% block body_content %}
 
 <div class="accordion" id="accordionExample">
-	{% for pair in data %}
+	{% for node in nodes %}
 	<div class="card">
-		<div class="card-header" id="heading{{ pair.node.node_id }}">
+		<div class="card-header" id="heading{{ node.id }}">
 			<h2 class="mb-0">
 				<button class="btn btn-link" type="button" data-toggle="collapse"
-					data-target="#collapse{{ pair.node.node_id }}" aria-expanded="true"
-					aria-controls="collapse{{ pair.node.node_id }}">
-					{{ pair.node.location }} (Node {{ pair.node.node_id }})
+					data-target="#collapse{{ node.id }}" aria-expanded="true"
+					aria-controls="collapse{{ node.id }}">
+					{{ node.location }} (Node {{ node.id }})
 				</button>
 			</h2>
 		</div>
 
-		<div id="collapse{{ pair.node.node_id }}" class="collapse" aria-labelledby="heading{{ pair.node.node_id }}"
+		<div id="collapse{{ node.id }}" class="collapse" aria-labelledby="heading{{ node.id }}"
 			data-parent="#accordionExample">
 			<div class="card-body">
-				<canvas id="chartjs-{{ pair.node.node_id }}" class="chartjs" width="423" height="211"
-					style="display: block; height: 169px; width: 339px;"></canvas>
+				<canvas id="chartjs-{{ node.id }}" class="chartjs" width="423" height="50"
+					style="display: block; height: 50px; width: 339px;"></canvas>
 			</div>
 		</div>
 	</div>
 	{% endfor %}
 </div>
-
-<canvas id="canvas" style="display: block; width: 468px; height: 234px;" width="468" height="234"
-	class="chartjs-render-monitor"></canvas>
 
 {% endblock %}
 
@@ -45,24 +42,28 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js" crossorigin=" anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.min.js" crossorigin="anonymous"></script>
 
-{% for pair in data %}
+{% for node in nodes %}
 <script>
-	new Chart(document.getElementById("chartjs-{{ pair.node.node_id }}"), {
+	new Chart(document.getElementById("chartjs-{{ node.id }}"), {
 		type: 'line',
 		data: {
-			datasets: [{
-				label: 'Temperature',
+			datasets: [
+			{% for set in node.datasets %}
+			{
+				label: '{{ set.name }}',
 				showLine: true,
 				fill: false,
-				borderColor: 'rgba(255, 0, 0, 0.5)',
-				data: [{
-					x: moment().add(1, 'd').format(), y: 0
-				}, {
-					x: moment().add(4, 'd').format(), y: 10
-				}, {
-					x: moment().add(5, 'd').format(), y: 5
-				}]
-			}]
+				borderColor: 'rgba({{ set.color.0 }}, {{ set.color.1 }}, {{ set.color.2 }}, {{ set.color.3 }})',
+				data: [
+				{% for point in set.set %}
+				{
+					t: '{{ point.x }}', y: {{ point.y }}
+				},
+				{% endfor %}
+				]
+			},
+			{% endfor %}
+			]
 		},
 		options: {
 			responsive: true,
@@ -75,7 +76,7 @@
 					type: 'time',
 					display: true,
 					scaleLabel: {
-						display: true,
+						display: false,
 						labelString: 'Date'
 					},
 					ticks: {
@@ -86,9 +87,9 @@
 					}
 				}],
 				yAxes: [{
-					display: true,
+					display: false,
 					scaleLabel: {
-						display: true,
+						display: false,
 						labelString: 'value'
 					}
 				}]

@@ -27,6 +27,48 @@ class Node(models.Model):
 
 		super().save(*args, **kwargs)
 
+	def getTmps(self):
+		if self.hasTmp:
+			entries = NodeReading.objects.filter(node=self)
+			return [ { "x" : entry.timestamp.strftime("%Y-%m-%dT%H:%M") + "+00:00", "y" : entry.temperature } for entry in entries ]
+		else:
+			return None
+
+	def getHums(self):
+		if self.hasHum:
+			entries = NodeReading.objects.filter(node=self)
+			return [ { "x" : entry.timestamp.strftime("%Y-%m-%dT%H:%M") + "+00:00", "y" : entry.humidity } for entry in entries ]
+		else:
+			return None
+
+	def getLgts(self):
+		if self.hasLgt:
+			entries = NodeReading.objects.filter(node=self)
+			return [ { "x" : entry.timestamp.strftime("%Y-%m-%dT%H:%M") + "+00:00", "y" : entry.light } for entry in entries ]
+		else:
+			return None
+
+	def getSnds(self):
+		if self.hasSnd:
+			entries = NodeReading.objects.filter(node=self)
+			return [ { "x" : entry.timestamp.strftime("%Y-%m-%dT%H:%M") + "+00:00", "y" : entry.sound } for entry in entries ]
+		else:
+			return None
+
+	def getVlts(self):
+		if self.hasVlt:
+			entries = NodeReading.objects.filter(node=self)
+			return [ { "x" : entry.timestamp.strftime("%Y-%m-%dT%H:%M") + "+00:00", "y" : entry.voltage } for entry in entries ]
+		else:
+			return None
+
+	def getAmps(self):
+		if self.hasAmp:
+			entries = NodeReading.objects.filter(node=self)
+			return [ { "x" : entry.timestamp.strftime("%Y-%m-%dT%H:%M") + "+00:00", "y" : entry.current } for entry in entries ]
+		else:
+			return None
+
 
 class NodeReading(models.Model):
 	class Meta:

@@ -104,3 +104,6 @@ venv.bak/
 .mypy_cache/
 web-dnsmasq/PyDNSMasq/configs/test_config1.conf.new
 web-dnsmasq/PyDNSMasq/configs/test_config2.conf.new
+
+# Custom Ignores
+migrations/
