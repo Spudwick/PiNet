@@ -48,16 +48,17 @@
 		type: 'line',
 		data: {
 			datasets: [
-			{% for set in node.datasets %}
+			{% for set in node.charts %}
 			{
 				label: '{{ set.name }}',
 				showLine: true,
 				fill: false,
-				borderColor: 'rgba({{ set.color.0 }}, {{ set.color.1 }}, {{ set.color.2 }}, {{ set.color.3 }})',
+				borderColor: 'rgba({{ set.color.0 }}, {{ set.color.1 }}, {{ set.color.2 }}, 0.5)',
+				backgroundColor: 'rgba({{ set.color.0 }}, {{ set.color.1 }}, {{ set.color.2 }}, 0.5)',
 				data: [
 				{% for point in set.set %}
 				{
-					t: '{{ point.x }}', y: {{ point.y }}
+					t: '{{ point.t }}', y: {{ point.y }}
 				},
 				{% endfor %}
 				]
