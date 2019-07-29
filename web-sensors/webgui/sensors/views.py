@@ -9,9 +9,9 @@ def index(request):
 	nodes = [ {
 		"id" : node.node_id,
 		"location" : node.location,
-		"charts" : node.jsCharts()
+		"charts" : node.jsNodeChart()
 	} for node in Node.objects.all() ]
 
-	print(nodes)
+	print(NodeReading.jsSensorChart("temperature"))
 
 	return render(request, 'sensors/index.html', {'nodes': nodes })
