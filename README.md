@@ -86,7 +86,6 @@ $ sudo nano /etc/hostname
 $ sudo nano /etc/hosts
 ```
 Then reboot the RPi for the changes to take effect.
-Editing the `hostname` file 
 #### Setting Static IP Address
 The RPi will begin confgured to obtain an IP address automatically through DHCP. It can be configured to use a static IP address by adding the following configuration to `/etc/dhcpcd.conf`.
 ```
