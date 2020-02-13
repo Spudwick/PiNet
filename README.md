@@ -131,3 +131,18 @@ An MQTT client can be installed using the:
 ```
 $ sudo apt-get install mosquitto-clients
 ```
+
+### Testing Mosquitto MQTT
+To test the installation of the Mosquitto Broker we can use a client to Subscribe and Publish to a test Topic using the below.
+In one terminal tab use the client to subscribe to a test Topic:
+```
+$ mosquitto_sub -h 192.168.0.200 -t test_topic
+```
+In another terminal publish a message to the same Topic:
+```
+$ mosquitto_pub -h 192.168.0.200 -t test_topic -m "Hello World!"
+```
+If all is working correctly you should see the `mosquitto_sub` tab print out `Hello World!`.
+
+### Configuring Mosquitto MQTT TLS
+Very helpfull [tutorial](http://www.steves-internet-guide.com/mosquitto-tls/).
