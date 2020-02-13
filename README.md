@@ -10,6 +10,10 @@
     * [Setting Static IP Address](#setting-static-ip-address)
 * [MQTT](#mqtt)
   * [Installing Mosquitto MQTT](#installing-mosquitto-mqtt)
+  * [Testing Mosquitto MQTT](#testing-mosquitto-mqtt)
+  * [Configuring Mosquitto for TLS](#configuring-mosquitto-for-tls)
+    * [Configuring the Broker](#configuring-the-broker)
+    * [Connecting from Client](#connecting-from-client)
 
 ## RPi Setup
 ### Formatting SD Card
@@ -144,5 +148,62 @@ $ mosquitto_pub -h 192.168.0.200 -t test_topic -m "Hello World!"
 ```
 If all is working correctly you should see the `mosquitto_sub` tab print out `Hello World!`.
 
-### Configuring Mosquitto MQTT TLS
-Very helpfull [tutorial](http://www.steves-internet-guide.com/mosquitto-tls/).
+### Configuring Mosquitto for TLS
+Most of the below has been taken from this very helpfull [tutorial](http://www.steves-internet-guide.com/mosquitto-tls/).
+#### Configuring the Broker
+To generate the required certificates and keys we require `openssl`, ensure the package is installed by running:
+```
+$ sudo apt-get install openssl
+```
+Now we can start generating the files. First we generate a key pair for the Certificate Authority (CA):
+```
+$ openssl genrsa -des3 -out ca.key 2048
+```
+Then generate a CA certificate:
+```
+$ openssl req -new -x509 -days 1826 -key ca.key -out ca.crt
+```
+Now make the server key pair that will be used bu the broker:
+```
+$ openssl genrsa -out server.key 2048
+```
+Now we generate a Certificate Request. When entering the required details, the `Common Name` field is important here. This must be set to either the **IP Address or Hostname** of the broker machine (depending on which is used by the client to connect).
+We then use the generated CA key (*ca.crt* and *ca.key*) to sign the server certificate.
+```
+openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 360
+```
+We then copy the generated files to the correct places:
+```
+$ sudo cp ca.crt /etc/mosquitto/ca_certificates/
+$ sudo cp server.crt /etc/mosquitto/certs/
+$ sudo cp server.key /etc/mosquitto/certs/
+```
+Then, to configure Mosquitto to use TLS, we generate a config file under `/etc/mosquitto/conf.d/` called `mqtt-tls.conf` and add the below to it.
+```
+port 8883
+
+cafile /etc/mosquitto/ca_certificates/ca.crt
+keyfile /etc/mosquitto/certs/server.key
+certfile /etc/mosquitto/certs/server.crt
+tls_version tlsv1_2
+```
+After a reboot, or `sudo systemctl restart mosquitto.service`, the Mosquitto Broker will require the client to connect using TLS V1.2.
+
+For testing purposes, you can disable the Mosquitto service and run the server from the command line as below.
+```
+$ sudo systemctl stop mosquitto.service
+$ sudo mosquitto -c /etc/mosquitto/conf.d/mqtt-tls.conf -v
+```
+#### Connecting from Client
+Before the client can attempt to connect to the Broker over TLS it requires access to the generated *ca.crt* file. This can be copied over from the server using `scp`:
+```
+$ scp pi@192.168.0.200:/home/licences/mosquitto/ca.crt ./ca.crt
+```
+Then to subscribe to a Topic we use:
+```
+$ mosquitto_sub -h 192.168.0.150 -p 8883 --tls-version tlsv1.2 --cafile Documents/licences/mosquitto-mqtt/ca.crt -t test_topic
+```
+And to publish to a Topic we use:
+```
+$ mosquitto_pub -h 192.168.0.150 -p 8883 --tls-version tlsv1.2 --cafile Documents/licences/mosquitto-mqtt/ca.crt -t test_topic -m "Hello World!"
+```
