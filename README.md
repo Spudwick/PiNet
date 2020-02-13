@@ -1,5 +1,8 @@
 # PiNet
-Repository for all things related to PiNet Project.
+## Table of Contents
+* [RPi Setup](#rpi-setup)
+  * [Formatting SD Card](#formatting-sd-card)
+  * [Installing BerryBoot](#installing-berryboot)
 
 ## RPi Setup
 ### Formatting SD Card
