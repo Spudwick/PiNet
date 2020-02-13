@@ -4,9 +4,12 @@
   * [Formatting SD Card](#formatting-sd-card)
   * [Installing BerryBoot and Raspbian](#installing-berryboot-and-raspbian)
   * [Basic Raspbian Setup](#basic-raspbian-setup)
+    * [Enabling SSH](#enabling-ssh)
     * [Customising Bash Prompt](#customising-bash-prompt)
     * [Changing Hostname](#changing-hostname)
     * [Setting Static IP Address](#setting-static-ip-address)
+* [MQTT](#mqtt)
+  * [Installing Mosquitto MQTT](#installing-mosquitto-mqtt)
 
 ## RPi Setup
 ### Formatting SD Card
@@ -73,6 +76,17 @@ $ sudo apt-get upgrade
 ```
 
 ### Basic Raspbian Setup
+#### Enabling SSH
+SSH is disabled on Raspbian by default. It can be enabled using:
+```
+$ sudo raspi-config
+```
+Navigate to `Interfacing Options->SSH` and enable.
+You can also enable SSH by enabling and starting the service as below.
+```
+$ sudo systemctl enable ssh
+$ sudo systemctl start ssh
+```
 #### Customising Bash Prompt
 To customise the Bash prompt edit the definition of `PS1` in the `~/.bashrc` file. I use the below:
 ```
@@ -104,4 +118,16 @@ After rebooting use the following to check configuration.
 $ ifconfig
 $ route -n
 $ ping www.google.com
+```
+
+## MQTT
+### Installing Mosquitto MQTT
+Run the following to install and start the Mosquitto MQTT Broker.
+```
+$ sudo apt-get install mosquitto 
+$ sudo systemctl enable mosquitto.service
+```
+An MQTT client can be installed using the:
+```
+$ sudo apt-get install mosquitto-clients
 ```
