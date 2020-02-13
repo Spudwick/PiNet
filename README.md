@@ -163,7 +163,7 @@ Then generate a CA certificate:
 ```
 $ openssl req -new -x509 -days 1826 -key ca.key -out ca.crt
 ```
-Now make the server key pair that will be used bu the broker:
+Now make the server key pair that will be used by the broker:
 ```
 $ openssl genrsa -out server.key 2048
 ```
