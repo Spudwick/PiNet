@@ -178,7 +178,7 @@ $ sudo cp ca.crt /etc/mosquitto/ca_certificates/
 $ sudo cp server.crt /etc/mosquitto/certs/
 $ sudo cp server.key /etc/mosquitto/certs/
 ```
-Then, to configure Mosquitto to use TLS, we generate a config file under `/etc/mosquitto/conf.d/` called `mqtt-tls.conf` and add the below to it.
+Then, to configure Mosquitto to use TLS, we generate the config file `/etc/mosquitto/conf.d/mqtt-tls.conf` and add the below to it.
 ```
 port 8883
 
@@ -187,23 +187,23 @@ keyfile /etc/mosquitto/certs/server.key
 certfile /etc/mosquitto/certs/server.crt
 tls_version tlsv1_2
 ```
-After a reboot, or `sudo systemctl restart mosquitto.service`, the Mosquitto Broker will require the client to connect using TLS V1.2.
+After a reboot, or `sudo systemctl restart mosquitto.service`, the Mosquitto broker will require the client to connect using TLS V1.2.
 
-For testing purposes, you can disable the Mosquitto service and run the server from the command line as below.
+For testing purposes, you can disable the Mosquitto service and run the broker from the command line as below.
 ```
 $ sudo systemctl stop mosquitto.service
 $ sudo mosquitto -c /etc/mosquitto/conf.d/mqtt-tls.conf -v
 ```
 #### Connecting from Client
-Before the client can attempt to connect to the Broker over TLS it requires access to the generated *ca.crt* file. This can be copied over from the server using `scp`:
+Before the client can attempt to connect to the broker over TLS it requires access to the generated *ca.crt* file. This can be copied over from the server using `scp`:
 ```
 $ scp pi@192.168.0.200:/home/licences/mosquitto/ca.crt ./ca.crt
 ```
 Then to subscribe to a Topic we use:
 ```
-$ mosquitto_sub -h 192.168.0.150 -p 8883 --tls-version tlsv1.2 --cafile Documents/licences/mosquitto-mqtt/ca.crt -t test_topic
+$ mosquitto_sub -h 192.168.0.200 -p 8883 --tls-version tlsv1.2 --cafile Documents/licences/mosquitto-mqtt/ca.crt -t test_topic
 ```
 And to publish to a Topic we use:
 ```
-$ mosquitto_pub -h 192.168.0.150 -p 8883 --tls-version tlsv1.2 --cafile Documents/licences/mosquitto-mqtt/ca.crt -t test_topic -m "Hello World!"
+$ mosquitto_pub -h 192.168.0.200 -p 8883 --tls-version tlsv1.2 --cafile Documents/licences/mosquitto-mqtt/ca.crt -t test_topic -m "Hello World!"
 ```
