@@ -131,7 +131,7 @@ Run the following to install and start the Mosquitto MQTT Broker.
 $ sudo apt-get install mosquitto 
 $ sudo systemctl enable mosquitto.service
 ```
-An MQTT client can be installed using the:
+The Mosquitto MQTT client can be installed using:
 ```
 $ sudo apt-get install mosquitto-clients
 ```
