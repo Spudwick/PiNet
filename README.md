@@ -168,6 +168,9 @@ Now make the server key pair that will be used by the broker:
 $ openssl genrsa -out server.key 2048
 ```
 Now we generate a Certificate Request. When entering the required details, the `Common Name` field is important here. This must be set to either the **IP Address or Hostname** of the broker machine (depending on which is used by the client to connect).
+```
+$ openssl req -new -out server.csr -key server.key
+```
 We then use the generated CA key (*ca.crt* and *ca.key*) to sign the server certificate.
 ```
 openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 360
