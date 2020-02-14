@@ -1,5 +1,9 @@
 # PiNet
+## About
+This repository is for all things related to my RPi based home network. The aim of this project is to explore Networking concepts and system design whilst building a small *"IoT Smart Home"* system. The details laid out below are mainly for me to keep track of stuff I've done/learnt, take everything with a grain of salt as I'm learning as I go myself!
+
 ## Table of Contents
+* [About](#about)
 * [RPi Setup](#rpi-setup)
   * [Formatting SD Card](#formatting-sd-card)
   * [Installing BerryBoot and Raspbian](#installing-berryboot-and-raspbian)
@@ -12,9 +16,10 @@
   * [Installing Mosquitto MQTT](#installing-mosquitto-mqtt)
   * [Testing Mosquitto MQTT](#testing-mosquitto-mqtt)
   * [Configuring Mosquitto for TLS](#configuring-mosquitto-for-tls)
+    * [What is TLS](#what-is-tls)
     * [Configuring the Broker](#configuring-the-broker)
     * [Connecting from Client](#connecting-from-client)
-
+    
 ## RPi Setup
 ### Formatting SD Card
 Use `fdisk` to delete all existing partitions and format for FAT32.
@@ -150,6 +155,14 @@ If all is working correctly you should see the `mosquitto_sub` tab print out `He
 
 ### Configuring Mosquitto for TLS
 Most of the below has been taken from this very helpfull [tutorial](http://www.steves-internet-guide.com/mosquitto-tls/).
+#### What is TLS
+TLS, or Transport Layer Security, is a method of securing a conection between a server and a client. It provides a method for the client to confirm that the server is who it says it is, and then encrypt all further comunications. 3 files are required to setup a TLS secured conection:
+1. ca.crt       (CA Certificate)
+2. server.key   (Server Key)
+3. server.crt   (Server Certificate)
+
+The *server.crt* file is created by signing the *server.key* using the *ca.key* and *ca.crt* files. When a client connects to the server using TLS, the server responds by sending it's Certificate (*server.crt*). The client checks the signature of the Server Certificate using *ca.crt* (Possible as *server.crt* was signed using *ca.crt*). Assuming everything checks out, the client can then use the Servers Public Key, *server.key* (Stored in *server.crt* as part of signing process), to agree a Session Key that can be used to encrypt all further communications.
+
 #### Configuring the Broker
 To generate the required certificates and keys we require `openssl`, ensure the package is installed by running:
 ```
