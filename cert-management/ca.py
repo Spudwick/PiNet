@@ -1,145 +1,62 @@
-from OpenSSL import crypto
-import os
+
+import datetime
 import socket
 import random
-import datetime
+from OpenSSL import crypto
 
-
-class AuthFile():
-	load_method = None
-	
-	@classmethod
-	def fromFile(cls, path):
-		ret = cls(path)
-		ret.read()
-		return ret
-
-	def __init__(self, path=None):
-
-		print(f'Creating new { self.__class__.__name__ } object.')
-
-		self.file = None
-		self.path = path
-
-		if self.path and os.path.exists(self.path):
-			self.read()
-
-	def __getattr__(self, name):
-		try:
-			return getattr(self.file, name)
-		except AttributeError:
-			raise AttributeError(f'Neither { self.__class__.__name__ } or { self.file.__class__.__name__ } objects have attribute { name }!')
-
-	def read(self, path=None):
-		if self.load_method == None:
-			raise NotImplementedError(f'Load Method not provided for { self.__class__.__name__ } object!')
-		
-		if path:
-			self.path = path
-		if not self.path:
-			raise ValueError("File path not specified!")
-
-		print(f'Reading file { self.path }')
-
-		with open(self.path) as f:
-			self.file = self.__class__.load_method(crypto.FILETYPE_PEM, f.read())
-
-		if self.file == None:
-			raise IOError("Failed to read file " + self.path + "!")
-		
-		print(f'Type of self.file is { self.file.__class__.__name__ }')
-
-	def write(self, path=None):
-		if self.dump_method == None:
-			raise NotImplementedError(f'Dump Method not provided for { self.__class__.__name__ } object!')
-		
-		if path:
-			self.path = path
-		if not self.path:
-			raise ValueError("File path not specified!")
-		
-		print(f'Writing { self.file.__class__.__name__ } to file { self.path }')
-
-		string = self.__class__.dump_method(crypto.FILETYPE_PEM, self.file)
-
-		with open(self.path, "wt") as f:
-			f.write(string.decode("utf-8"))
-
-	def generate(self):
-		raise NotImplementedError(f'No generate method defined for { self.__class__.__name__ }')
-
-
-class KeyFile(AuthFile):
-	load_method = crypto.load_privatekey
-	dump_method = crypto.dump_privatekey
-
-	def generate(self):
-		if self.file == None:
-			self.file = crypto.PKey()
-
-		print(f'Generating new { self.file.__class__.__name__ }...')
-
-		self.file.generate_key(crypto.TYPE_RSA, 2048)
-
-
-class CertFile(AuthFile):
-	load_method = crypto.load_certificate
-	dump_method = crypto.dump_certificate
-
-	def generate(self, country=None, state=None, location=None, organisation=None, unit=None, common_name=None, notBefore=0, notAfter=3600, key=None):
-		if self.file == None:
-			self.file = crypto.X509()
-
-		print(f'Generating new { self.file.__class__.__name__ }...')
-
-		if country:
-			self.file.get_subject().C = country
-		if state:
-			self.file.get_subject().ST = state
-		if location:
-			self.file.get_subject().L = location
-		if organisation:
-			self.file.get_subject().O = organisation
-		if unit:
-			self.file.get_subject().OU = unit
-		if common_name == None:
-			self.file.get_subject().CN = socket.gethostname()
-		else:
-			self.file.get_subject().CN = common_name
-
-		self.file.gmtime_adj_notBefore(notBefore)
-		self.file.gmtime_adj_notAfter(notAfter)
-
-		print(f'   Common Name  : { self.file.get_subject().CN }')
-		print(f'   Valid From   : { datetime.datetime.strptime(self.file.get_notBefore().decode("ascii"), "%Y%m%d%H%M%SZ") }')
-		print(f'   Valid Until  : { datetime.datetime.strptime(self.file.get_notAfter().decode("ascii"), "%Y%m%d%H%M%SZ") }')
-
-		self.file.set_serial_number(random.getrandbits(64))
-
-		if key:
-			self.sign(key)
-
-	def sign(self, key):
-
-		print(f'Signing { self.file.__class__.__name__ } using { key }')
-
-		self.file.set_pubkey(key.file)
-		self.file.sign(key.file, 'sha512')
+from CA_Helper import *
 
 
 if __name__ == "__main__":
+    # Generate RSA Key Pair.
+    # This becomes the CA Certificate Public and Private Key.
+    CA_privkeyfile = PKeyFile(PKEY_PRIV_KEY, path="testfiles/ca_priv.key")
+    CA_privkeyfile.generate_key(crypto.TYPE_RSA, 2048)
+    CA_privkeyfile.writefile()
 
-	ca_key = KeyFile("./testfiles/ca.key")
-	ca_key.generate()
-	ca_key.write()
+    # Create a new PKeyFile object that contains the same PKey instance to also save the Public Key.
+    CA_pubkeyfile = PKeyFile(PKEY_PUB_KEY, obj=CA_privkeyfile.inst, path="testfiles/ca_pub.key")
+    CA_pubkeyfile.writefile()
 
-	ca_crt = CertFile("./testfiles/ca.crt")
-	ca_crt.generate()
-	ca_crt.sign(key=ca_key)
-	ca_crt.write()
+    # Generate the CA Certificate.
+    CA_certfile = X509File("testfiles/ca.crt")
+    CA_certfile.get_subject().C = "UK"
+    CA_certfile.get_subject().ST = "West Midlands"
+    CA_certfile.get_subject().L = "Birmingham"
+    CA_certfile.get_subject().O = "Test"
+    CA_certfile.get_subject().OU = "Test Unit"
+    CA_certfile.get_subject().CN = socket.gethostname()
+    CA_certfile.gmtime_adj_notBefore(0)
+    CA_certfile.gmtime_adj_notAfter(3600)
+    CA_certfile.set_serial_number(random.getrandbits(64))
+    # Set the Public Key field to the Public Key from the pair generated above.
+    CA_certfile.set_pubkey(CA_pubkeyfile.inst)
+    # Sign the CA Certificate using the Private Key from the pair generated above.
+    CA_certfile.sign(CA_privkeyfile.inst, 'sha512')
+    CA_certfile.writefile()
+    # Result is a SELF-SIGNED CA Certificate.
+    # The certificate contains the Public Key and we have already saved the Private Key to a file.
 
-	svr_key = KeyFile("./testfiles/svr.key")
-	svr_key.generate()
-	svr_key.write()
+    # Generate a CSR for signing using our generated CA details.
+    csrfile = X509ReqFile("testfiles/server.csr")
+    csrfile.get_subject().C = "UK"
+    csrfile.get_subject().ST = "West Midlands"
+    csrfile.get_subject().L = "Birmingham"
+    csrfile.get_subject().O = "Test"
+    csrfile.get_subject().OU = "Test CSR"
+    csrfile.get_subject().CN = socket.gethostname()
+    csrfile.set_pubkey(CA_pubkeyfile.inst)
+    csrfile.sign(CA_privkeyfile.inst, 'sha512')
+    csrfile.writefile()
 
-	
+    # Sign the CSR using our generated CA details.
+    certfile = X509File("testfiles/server.crt")
+    certfile.set_serial_number(random.getrandbits(64))
+    certfile.gmtime_adj_notBefore(0)
+    certfile.gmtime_adj_notAfter(3600)
+    certfile.set_issuer(CA_certfile.get_subject())
+    certfile.set_subject(csrfile.get_subject())
+    certfile.set_pubkey(csrfile.get_pubkey())
+    certfile.sign(CA_privkeyfile.inst, 'sha512')
+    certfile.writefile()
+    # Results in a CA-SIGNED Certificate.
