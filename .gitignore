@@ -107,3 +107,5 @@ web-dnsmasq/PyDNSMasq/configs/test_config2.conf.new
 
 # Custom Ignores
 migrations/
+*.crt
+*.key
