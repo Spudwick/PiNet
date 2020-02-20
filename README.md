@@ -198,9 +198,16 @@ $ sudo cp server.key /etc/mosquitto/certs/
 ```
 Then, to configure Mosquitto to use TLS, we generate the config file `/etc/mosquitto/conf.d/mqtt-tls.conf` and add the below to it.
 ```
+# Specify the publically available CA Certificate.
 cafile /etc/mosquitto/ca_certificates/ca.crt
+
+# Specify the file containing the Servers Private Key.
 keyfile /etc/mosquitto/certs/server.key
+
+# Specify the Servers Certificate signed by the CA.
 certfile /etc/mosquitto/certs/server.crt
+
+# Specify the version of TLS to use.
 tls_version tlsv1_2
 ```
 After a reboot, or `sudo systemctl restart mosquitto.service`, the Mosquitto broker will require the client to connect using TLS V1.2.
