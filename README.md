@@ -198,8 +198,6 @@ $ sudo cp server.key /etc/mosquitto/certs/
 ```
 Then, to configure Mosquitto to use TLS, we generate the config file `/etc/mosquitto/conf.d/mqtt-tls.conf` and add the below to it.
 ```
-port 8883
-
 cafile /etc/mosquitto/ca_certificates/ca.crt
 keyfile /etc/mosquitto/certs/server.key
 certfile /etc/mosquitto/certs/server.crt
@@ -219,11 +217,11 @@ $ scp pi@192.168.0.200:/home/licences/mosquitto/ca.crt ./ca.crt
 ```
 Then to subscribe to a Topic we use:
 ```
-$ mosquitto_sub -h 192.168.0.200 -p 8883 --tls-version tlsv1.2 --cafile Documents/licences/mosquitto-mqtt/ca.crt -t test_topic
+$ mosquitto_sub -h 192.168.0.200 --tls-version tlsv1.2 --cafile Documents/licences/mosquitto-mqtt/ca.crt -t test_topic
 ```
 And to publish to a Topic we use:
 ```
-$ mosquitto_pub -h 192.168.0.200 -p 8883 --tls-version tlsv1.2 --cafile Documents/licences/mosquitto-mqtt/ca.crt -t test_topic -m "Hello World!"
+$ mosquitto_pub -h 192.168.0.200 --tls-version tlsv1.2 --cafile Documents/licences/mosquitto-mqtt/ca.crt -t test_topic -m "Hello World!"
 ```
 
 ### Configuring Mosquitto for Client Authentication
@@ -250,6 +248,6 @@ Note that when adding users to an active password file, the MQTT broker must be 
 
 We can then connect to the Brocker using the below commands.
 ```
-$ mosquitto_sub -h 192.168.0.200 -p 8883 --tls-version tlsv1.2 --cafile Documents/licences/mosquitto-mqtt/ca.crt -u <username> -P <password> -t test_topic
-$ mosquitto_pub -h 192.168.0.200 -p 8883 --tls-version tlsv1.2 --cafile Documents/licences/mosquitto-mqtt/ca.crt -u <username> -P <password> -t test_topic -m "Hello World!"
+$ mosquitto_sub -h 192.168.0.200 --tls-version tlsv1.2 --cafile Documents/licences/mosquitto-mqtt/ca.crt -u <username> -P <password> -t test_topic
+$ mosquitto_pub -h 192.168.0.200 --tls-version tlsv1.2 --cafile Documents/licences/mosquitto-mqtt/ca.crt -u <username> -P <password> -t test_topic -m "Hello World!"
 ```
