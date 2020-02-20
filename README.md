@@ -21,7 +21,6 @@ This repository is for all things related to my RPi based home network. The aim 
     * [Connecting from Client](#connecting-from-client)
   * [Configuring Mosquitto for Client Authentication](#configuring-mosquitto-for-client-authentication)
     * [Username and Password Authentication](#username-and-password-authentication)
-    * [Certificate Authentication](#certificate-authentication)
     
 ## RPi Setup
 ### Formatting SD Card
@@ -215,7 +214,7 @@ After a reboot, or `sudo systemctl restart mosquitto.service`, the Mosquitto bro
 For testing purposes, you can disable the Mosquitto service and run the broker from the command line as below.
 ```
 $ sudo systemctl stop mosquitto.service
-$ sudo mosquitto -c /etc/mosquitto/conf.d/mqtt-tls.conf -v
+$ sudo mosquitto -c /etc/mosquitto/mosquitto.conf -v
 ```
 #### Connecting from Client
 Before the client can attempt to connect to the broker over TLS it requires access to the generated *ca.crt* file. This can be copied over from the server using `scp`:
