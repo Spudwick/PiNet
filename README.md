@@ -19,6 +19,9 @@ This repository is for all things related to my RPi based home network. The aim 
     * [What is TLS](#what-is-tls)
     * [Configuring the Broker](#configuring-the-broker)
     * [Connecting from Client](#connecting-from-client)
+  * [Configuring Mosquitto for Client Authentication](#configuring-mosquitto-for-client-authentication)
+    * [Username and Password Authentication](#username-and-password-authentication)
+    * [Certificate Authentication](#certificate-authentication)
     
 ## RPi Setup
 ### Formatting SD Card
@@ -90,7 +93,7 @@ SSH is disabled on Raspbian by default. It can be enabled using:
 ```
 $ sudo raspi-config
 ```
-Navigate to `Interfacing Options->SSH` and enable.
+Navigate to *Interfacing Options->SSH* and enable.
 You can also enable SSH by enabling and starting the service as below.
 ```
 $ sudo systemctl enable ssh
@@ -162,7 +165,6 @@ TLS, or Transport Layer Security, is a method of securing a conection between a 
 3. server.crt   (Server Certificate)
 
 The *server.crt* file is created by signing the *server.key* using the *ca.key* and *ca.crt* files. When a client connects to the server using TLS, the server responds by sending it's Certificate (*server.crt*). The client checks the signature of the Server Certificate using *ca.crt* (Possible as *server.crt* was signed using *ca.crt*). Assuming everything checks out, the client can then use the Servers Public Key, *server.key* (Stored in *server.crt* as part of signing process), to agree a Session Key that can be used to encrypt all further communications.
-
 #### Configuring the Broker
 To generate the required certificates and keys we require `openssl`, ensure the package is installed by running:
 ```
@@ -222,4 +224,32 @@ $ mosquitto_sub -h 192.168.0.200 -p 8883 --tls-version tlsv1.2 --cafile Document
 And to publish to a Topic we use:
 ```
 $ mosquitto_pub -h 192.168.0.200 -p 8883 --tls-version tlsv1.2 --cafile Documents/licences/mosquitto-mqtt/ca.crt -t test_topic -m "Hello World!"
+```
+
+### Configuring Mosquitto for Client Authentication
+Before configuring Mosquitto for Client Authentication you should first follow the steps to [configure Mosquitto for TLS](#configuring-mosquitto-for-tls) as usernames and passwords are transmitted in raw text and so would be clearly visable on the network without TLS transport encryption.
+#### Username and Password Authentication
+The first step is to create the password file that Mosquitto will use. This can be done, whilst adding the first user, using the below:
+```
+$ sudo mosquitto_passwd -c /etc/mosquitto/users.pass <username>
+```
+The script will prompt you to enter a password for the specified username. Users can then be added and deleted from the file using:
+```
+$ sudo mosquitto_passwd -b /etc/mosquitto/users.pass <username> <password>
+$ sudo mosquitto_passwd -D /etc/mosquitto/users.pass <username>
+```
+Just like for TLS, we now need to configure the mosquitto configuration files to enable user authentication. Create a new configuration file called `/etc/mosquitto/conf.d/client-auth.conf` and enter:
+```
+# Require clients to provide identification.
+allow_anonymous false
+
+# Specify the password file.
+password_file /etc/mosquitto/users.pass
+```
+Note that when adding users to an active password file, the MQTT broker must be restarted before the new user is made available.
+
+We can then connect to the Brocker using the below commands.
+```
+$ mosquitto_sub -h 192.168.0.200 -p 8883 --tls-version tlsv1.2 --cafile Documents/licences/mosquitto-mqtt/ca.crt -u <username> -P <password> -t test_topic
+$ mosquitto_pub -h 192.168.0.200 -p 8883 --tls-version tlsv1.2 --cafile Documents/licences/mosquitto-mqtt/ca.crt -u <username> -P <password> -t test_topic -m "Hello World!"
 ```
