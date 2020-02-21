@@ -187,7 +187,7 @@ $ openssl req -new -out server.csr -key server.key
 ```
 We then use the generated CA key (*ca.crt* and *ca.key*) to sign the server certificate.
 ```
-openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 360
+$ openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 360
 ```
 We then copy the generated files to the correct places:
 ```
