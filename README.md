@@ -265,7 +265,7 @@ First we must configure the MQTT broker to require Client Certificates. This can
  allow_anonymous false
 
  # Configure Broker to require client certificates.
- require_certificates true
+ require_certificate true
 
  # Pull the Client identity from the Certificate Common Name.
  use_identity_as_username true
