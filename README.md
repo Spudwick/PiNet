@@ -22,6 +22,7 @@ This repository is for all things related to my RPi based home network. The aim 
   * [Configuring Mosquitto for Client Authentication](#configuring-mosquitto-for-client-authentication)
     * [Username and Password Authentication](#username-and-password-authentication)
     * [Certificate Authentication](#certificate-authentication)
+* [Useful Commands](#useful-commands)
     
 ## RPi Setup
 ### Formatting SD Card
@@ -286,3 +287,7 @@ The client can then connect to the MQTT Broker using:
 $ mosquitto_sub -h 192.168.0.200 --tls-version tlsv1.2 --cafile ./ca.crt --cert ./$(hostname).crt --key ./$(hostname).key -t test_topic
 $ mosquitto_pub -h 192.168.0.200 --tls-version tlsv1.2 --cafile ./ca.crt --cert ./$(hostname).crt --key ./$(hostname).key -t test_topic -m "Hello World!"
 ```
+
+## Useful Commands
+* `sudo systemctl [start|stop|restart] <service>` - Start, Stop or Restart a service.
+* `sudo systemctl --type=service --state=running` - List all running services.
