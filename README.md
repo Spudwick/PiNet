@@ -21,6 +21,7 @@ This repository is for all things related to my RPi based home network. The aim 
     * [Connecting from Client](#connecting-from-client)
   * [Configuring Mosquitto for Client Authentication](#configuring-mosquitto-for-client-authentication)
     * [Username and Password Authentication](#username-and-password-authentication)
+    * [Certificate Authentication](#certificate-authentication)
     
 ## RPi Setup
 ### Formatting SD Card
@@ -223,11 +224,11 @@ $ scp pi@192.168.0.200:/home/licences/mosquitto/ca.crt ./ca.crt
 ```
 Then to subscribe to a Topic we use:
 ```
-$ mosquitto_sub -h 192.168.0.200 --tls-version tlsv1.2 --cafile Documents/licences/mosquitto-mqtt/ca.crt -t test_topic
+$ mosquitto_sub -h 192.168.0.200 --tls-version tlsv1.2 --cafile ./ca.crt -t test_topic
 ```
 And to publish to a Topic we use:
 ```
-$ mosquitto_pub -h 192.168.0.200 --tls-version tlsv1.2 --cafile Documents/licences/mosquitto-mqtt/ca.crt -t test_topic -m "Hello World!"
+$ mosquitto_pub -h 192.168.0.200 --tls-version tlsv1.2 --cafile ./ca.crt -t test_topic -m "Hello World!"
 ```
 
 ### Configuring Mosquitto for Client Authentication
@@ -254,6 +255,34 @@ Note that when adding users to an active password file, the MQTT broker must be 
 
 We can then connect to the Brocker using the below commands.
 ```
-$ mosquitto_sub -h 192.168.0.200 --tls-version tlsv1.2 --cafile Documents/licences/mosquitto-mqtt/ca.crt -u <username> -P <password> -t test_topic
-$ mosquitto_pub -h 192.168.0.200 --tls-version tlsv1.2 --cafile Documents/licences/mosquitto-mqtt/ca.crt -u <username> -P <password> -t test_topic -m "Hello World!"
+$ mosquitto_sub -h 192.168.0.200 --tls-version tlsv1.2 --cafile ./ca.crt -u <username> -P <password> -t test_topic
+$ mosquitto_pub -h 192.168.0.200 --tls-version tlsv1.2 --cafile ./ca.crt -u <username> -P <password> -t test_topic -m "Hello World!"
+```
+#### Certificate Authentication
+First we must configure the MQTT broker to require Client Certificates. This can be done by replacing the Mosquitto config file */etc/mosquitto/conf.d/client-auth.conf* with the following.
+```
+ # Require clients to provide identification.
+ allow_anonymous false
+
+ # Configure Broker to require client certificates.
+ require_certificates true
+
+ # Pull the Client identity from the Certificate Common Name.
+ use_identity_as_username true
+```
+The next step is to generate Certificates for all the Clients. To do this we require a Certificate Authority Key and Certificate as generated whilst [configuring the Mosquitto Broker for TLS](#configuring-the-broker).
+Once this has been completed we can generate a new Public/Private key pair for the client, and use them to generate a Certificate Signing Request.
+```
+$ openssl genrsa -out $(hostname).key 2048
+$ openssl req -new -out $(hostname).csr -key $(hostname).key
+```
+Whilst filling in the data required for generating the CSR, the only value that is important is the `Common Name`. This will be used in place of a username to identify the client.
+We then sign the CSR using the CA Key and Certificate. In a typical setup the client wouldn't be able to do this itself as they won't have access to the CAs Private Key. 
+```
+$ openssl x509 -req -in $(hostname).csr -CA ca.crt -CAkey ca.key -CAcreateserial -out $(hostname).crt -days 360
+```
+The client can then connect to the MQTT Broker using:
+```
+$ mosquitto_sub -h 192.168.0.200 --tls-version tlsv1.2 --cafile ./ca.crt --cert ./$(hostname).crt --key ./$(hostname).key -t test_topic
+$ mosquitto_pub -h 192.168.0.200 --tls-version tlsv1.2 --cafile ./ca.crt --cert ./$(hostname).crt --key ./$(hostname).key -t test_topic -m "Hello World!"
 ```
