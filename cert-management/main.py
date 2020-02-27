@@ -2,9 +2,9 @@
 from CA_Helper import *
 
 
-MQTT_CA = CA(ca_id="mqtt-ca")
-NodeRed_CA = CA(ca_id="nodered-ca")
-
-NodeRed_CA.gen_crt(cn="Test")
-
-print(repr(NodeRed_CA))
+CertAuth = CA("./ca/test-ca")
+print(CertAuth.path)
+print(CertAuth.path_ca)
+print(CertAuth.path_certs)
+print(CertAuth.ca_files)
+print(CertAuth.certs)

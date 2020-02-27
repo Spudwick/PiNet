@@ -4,4 +4,4 @@ __all__ = [ "FileContainer", "X509File", "PKeyFile", "X509ReqFile", "CA",
 
 from .containers import *
 from .filetypes import *
-from .certauth import *
+from .ca import *
