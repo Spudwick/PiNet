@@ -308,3 +308,4 @@ The Node-Red editor should now be accessable by navigating to `http://<hostname>
 ## Useful Commands
 * `sudo systemctl [start|stop|restart] <service>` - Start, Stop or Restart a service.
 * `sudo systemctl --type=service --state=running` - List all running services.
+* `openssl x509 -in cert.crt -out cert.pem` - Convert `.crt` file to `.pem` file.
