@@ -22,6 +22,8 @@ This repository is for all things related to my RPi based home network. The aim 
   * [Configuring Mosquitto for Client Authentication](#configuring-mosquitto-for-client-authentication)
     * [Username and Password Authentication](#username-and-password-authentication)
     * [Certificate Authentication](#certificate-authentication)
+* [Node-Red](#node-red)
+  * [Installing Node-Red](#installing-node-red)
 * [Useful Commands](#useful-commands)
     
 ## RPi Setup
@@ -287,6 +289,21 @@ The client can then connect to the MQTT Broker using:
 $ mosquitto_sub -h 192.168.0.200 --tls-version tlsv1.2 --cafile ./ca.crt --cert ./$(hostname).crt --key ./$(hostname).key -t test_topic
 $ mosquitto_pub -h 192.168.0.200 --tls-version tlsv1.2 --cafile ./ca.crt --cert ./$(hostname).crt --key ./$(hostname).key -t test_topic -m "Hello World!"
 ```
+
+## Node-Red
+### Installing Node-Red
+The [Node-Red website](https://nodered.org/docs/getting-started/raspberrypi) has specific instructions for installing Node-Red on an RPi.
+
+Node-Red and it's dependancies can be installed by running the following.
+```
+bash <(curl -sL https://raw.githubusercontent.com/node-red/linux-installers/master/deb/update-nodejs-and-nodered)
+```
+Once everything has downloaded and installed successfully, the service needs to be enabled (to run on boot) and started as below.
+```
+$ sudo systemctl enable nodered.service
+$ sudo systemctl start nodered.service
+```
+The Node-Red editor should now be accessable by navigating to `http://<hostname>:1880` in a web browser.
 
 ## Useful Commands
 * `sudo systemctl [start|stop|restart] <service>` - Start, Stop or Restart a service.
