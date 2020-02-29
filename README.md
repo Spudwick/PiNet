@@ -305,6 +305,11 @@ $ sudo systemctl start nodered.service
 ```
 The Node-Red editor should now be accessable by navigating to `http://<hostname>:1880` in a web browser.
 
+## ESP32 Boards
+### Setting up Arduino IDE
+The Arduino IDE doesn't support the ESP32 based boards out of the box, it needs to be configured as in [Espressif's instructions](https://github.com/espressif/arduino-esp32/blob/master/docs/arduino-ide/boards_manager.md).
+First, the Espressif source needs to be added to the package manager by adding 
+
 ## Useful Commands
 * `sudo systemctl [start|stop|restart] <service>` - Start, Stop or Restart a service.
 * `sudo systemctl --type=service --state=running` - List all running services.
