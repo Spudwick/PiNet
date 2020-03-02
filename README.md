@@ -26,6 +26,7 @@ This repository is for all things related to my RPi based home network. The aim 
   * [Installing Node-Red](#installing-node-red)
 * [ESP32 Boards](#esp32-boards)
   * [Setting up Arduino IDE](#setting-up-arduino-ide)
+  * [Installing MQTT Client Library](#installing-mqtt-client-library)
 * [Useful Commands](#useful-commands)
     
 ## RPi Setup
@@ -311,11 +312,16 @@ The Node-Red editor should now be accessable by navigating to `http://<hostname>
 ### Setting up Arduino IDE
 The Arduino IDE doesn't support the ESP32 based boards out of the box, it needs to be configured as in [Espressif's instructions](https://github.com/espressif/arduino-esp32/blob/master/docs/arduino-ide/boards_manager.md).
 First, the Espressif source needs to be added to the package manager by adding `https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json` to the *Additional Boards Manager URLs* under *File->Preferences*.
-Once this has been added, you should be able to find the `es32` package under the Package Manager.
+Once this has been added, you should be able to find the `esp32` package under the Package Manager.
 
 To test, select the `DOIT ESP32 DEVKIT V1` board and try programming one of the test sketches installed alongside the esp32 boards. A good one to try is the `WiFiScan` sketch. This should work, however I got **"No module named serial"** errors whilst attempting to connect to the board. These turned out to be because I didn't have *pyserial* installed. This can be installed as below.
 ```
 $ sudo python -m pip install pyserial
+```
+### Installing MQTT Client Library
+For this project I will be using the [PubSubClient library](https://github.com/knolleary/pubsubclient) by Knolleary. To install, download the *.zip* from GitHub. This then needs to be extracted to your Arduino installations library folder. For a Linux install this is likely to be something like `~/Documents/Arduino/Library`. Once this has been completed you should be able to access the library by adding the below to the top of your source file.
+```
+#include <PubSubClient.h>
 ```
 
 ## Useful Commands
