@@ -9,7 +9,7 @@ struct ssid_s {
 
 
 // List of possible SSIDs
-extern struct ssid_s ssid_lst[1];
+extern struct ssid_s ssid_lst[2];
 
 // Certificate Authority Certificate
 extern const char *ca_crt;
