@@ -9,5 +9,11 @@
 
 IPAddress broker(192,168,0,150);
 
+enum pins_e {
+  PIN_AWAKE	= 1,
+  PIN_CONN	= 2,
+  PIN_ERROR	= 3,
+};
+
 
 #endif

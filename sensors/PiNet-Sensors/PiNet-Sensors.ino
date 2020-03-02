@@ -1,9 +1,12 @@
 
 #include <WiFiClientSecure.h>         // ESP32 Secure WiFi Client Library
 #include <PubSubClient.h>             // MQTT Client Library
+#include <Adafruit_BME280.h>          // Adafruit BME280 Sensor Package Library
+#include <Arduino_JSON.h>             // Arduino JSON Library
 
 #include "config.h"
 #include "private.h"
+
 
 //====================================================================
 // Utility Macros:
@@ -24,13 +27,15 @@ struct client_s {
 };
 struct client_s client;
 
+Adafruit_BME280 bme;      // BME280 Sensor on I2C
+
 
 //====================================================================
 // Function Prototypes:
 //====================================================================
-void enter_sleep(void);                     // Enter Deep Sleep Mode.
+void enter_sleep(void);                                                   // Enter Deep Sleep Mode.
 void error_halt(void);
-int connect_wifi(ssid_s* ssids, int cnt);   // Connect to one of provided SSIDs.
+int connect_wifi(ssid_s* ssids, int cnt);                                 // Connect to one of provided SSIDs.
 int connect_mqtt(struct client_s* client, IPAddress* broker, int port);
 //====================================================================
 
@@ -38,10 +43,19 @@ int connect_mqtt(struct client_s* client, IPAddress* broker, int port);
 void setup()
 {
 #if(DEBUG==1)
-  Serial.begin(115200);
+  Serial.begin(115200);   // Startup Serial peripheral
+  while(!Serial);         // Wait until Serial peripheral is up and running
 #endif
   
   DBG_PRINTF("Started with Debugging...\n");
+
+  // Setup LED Pins.
+  pinMode(PIN_AWAKE, OUTPUT);
+  digitalWrite(PIN_AWAKE, HIGH);
+  pinMode(PIN_CONN, OUTPUT);
+  digitalWrite(PIN_CONN, LOW);
+  pinMode(PIN_ERROR, OUTPUT);
+  digitalWrite(PIN_ERROR, LOW);
 
   // Connect to WiFi.
   if( connect_wifi(ssid_lst, ARY_LEN(ssid_lst)) < 0 )
@@ -50,12 +64,27 @@ void setup()
   // Connect to MQTT Broker.
   if( connect_mqtt(&client, &broker, MQTT_PORT) < 0 )
     error_halt();
+
+  digitalWrite(PIN_CONN, HIGH);       // Indicate through LEDs that we have connected successfully.
+
+  // Connect to BME280 Package.
+  if( connect_bme280() < 0 )
+    error_halt();
 }
 
 void loop()
 {
-  DBG_PRINTF("[MQTT:%s@%d] PUBLISH \"Hello from esp32\"\n",broker,MQTT_PORT);
-  client.mqtt.publish("test_topic","Hello from esp32");
+  JSONVar json;
+  json["temperatue"] = bme.readTemperature();
+  json["humidity"] = bme.readHumidity();
+  json["pressure"] = bme.readPressure();
+
+#if(DEBUG==1)
+  json.printTo(Serial);
+#endif
+  
+  DBG_PRINTF("[MQTT:%s@%d] PUBLISH \"%s\"\n",broker,MQTT_PORT, JSON.stringify(json).c_str() );
+  client.mqtt.publish( "test_topic", JSON.stringify(json).c_str() );
 
   enter_sleep();
 }
@@ -69,6 +98,11 @@ void loop()
 //====================================================================
 void enter_sleep(void)
 {
+  // Turn off all LEDs.
+  digitalWrite(PIN_AWAKE, LOW);
+  digitalWrite(PIN_CONN, LOW);
+  digitalWrite(PIN_ERROR, LOW);
+  
   DBG_PRINTF("Going to sleep for %ds...\n", SNSR_POLL_INTVL);  
   esp_sleep_enable_timer_wakeup(SNSR_POLL_INTVL * S2uS);      // Configure wakeup time
   esp_deep_sleep_start();                                     // Enter Deep Sleep
@@ -84,9 +118,10 @@ void error_halt(void)
 {
   DBG_PRINTF("An ERROR has occured!!!\n");
 
-  // TODO: Indicate error with LED.
+  digitalWrite(PIN_ERROR, HIGH);        // Indicate Error Status on LEDs.
+  delay(1000);
 
-  enter_sleep();
+  enter_sleep();                        // Put CPU to sleep.
 }
 //====================================================================
 
@@ -117,7 +152,7 @@ int connect_wifi(ssid_s* ssids, int cnt)
 
   DBG_PRINTF("Scanning for WiFi Networks...\n");
   n = WiFi.scanNetworks();      // Scan for SSIDs.
-  DBG_PRINTF("Found %d:\n",n);
+  DBG_PRINTF("Known %d, Found %d:\n",cnt,n);
 
   // Iterate over each scanned SSID. WiFi.SSID list is ordered from strongest signal to weakest. Scan through
   // list until we find the first known and connect, thus we connect to the strongest AP.
@@ -179,7 +214,7 @@ _connect:
 //   *broker  = Pointer to IP Address of Remote Broker.
 //   port     = Port that MQTT service is exposed on Broker.
 // Returns:
-//   >=0    = Succesfully Connected.
+//   0      = Succesfully Connected.
 //   -2     = Timeout whilst connecting.
 //====================================================================
 int connect_mqtt(struct client_s* client, IPAddress* broker, int port)
@@ -208,5 +243,27 @@ int connect_mqtt(struct client_s* client, IPAddress* broker, int port)
   delay(100);               // Small delay to ensure everything is ready to go.
   
   return 1;
+}
+//====================================================================
+
+//====================================================================
+// int connect_bme280(void)
+//--------------------------------------------------------------------
+// Setup I2C peripheral used to connect to BME280 package.
+// Returns:
+//   0      = Succesfully Connected.
+//   -1     = Failed to connect.
+//====================================================================
+int connect_bme280(void)
+{
+  DBG_PRINTF("Connecting to BME280 Package...\n");
+  
+  if( !bme.begin() )
+  {
+    DBG_PRINTF("Failed to connect to package! Sensor ID was %d\n",bme.sensorID());
+    return -1;
+  }
+
+  delay(100);               // Small delay to ensure everything is ready to go.
 }
 //====================================================================
