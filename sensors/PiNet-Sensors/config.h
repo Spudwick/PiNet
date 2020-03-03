@@ -2,6 +2,7 @@
 #define __CONFIG_H
 
 
+#define NODE_ID         12345       // Numerical Node ID
 #define DEBUG           1           // Compile with debugging
 #define WIFI_TIMEOUT    5           // Timeout for connecting to WiFi SSID (s)
 #define SNSR_POLL_INTVL 5           // Sensor Polling interval (s)
@@ -10,9 +11,9 @@
 IPAddress broker(192,168,0,150);
 
 enum pins_e {
-  PIN_AWAKE	= 1,
-  PIN_CONN	= 2,
-  PIN_ERROR	= 3,
+  PIN_AWAKE	= 25,
+  PIN_CONN	= 26,
+  PIN_ERROR	= 27,
 };
 
 

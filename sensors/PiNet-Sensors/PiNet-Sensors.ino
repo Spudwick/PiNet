@@ -11,13 +11,18 @@
 //====================================================================
 // Utility Macros:
 //====================================================================
-#define S2uS            1000000ULL                        // Conversion factor for Seconds to Micro-Seconds
+#define S2uS                  1000000ULL                  // Conversion factor for Seconds to Micro-Seconds
 #define ARY_LEN(ary)    (sizeof(ary) / sizeof(ary[0]))    // Get number of elements in array
 #if(DEBUG==1)
   #define DBG_PRINTF(...)  Serial.printf(__VA_ARGS__)
 #else
   #define DBG_PRINTF(...)
 #endif
+
+#define STR_HELPER(x)     #x
+#define STR(x)            STR_HELPER(x)
+#define MQTT_NODE_TOPIC   "/sensors/raw/" STR(NODE_ID)
+#define MQTT_CLIENT_NAME  "esp32-" STR(NODE_ID)
 //====================================================================
 
 
@@ -65,26 +70,23 @@ void setup()
   if( connect_mqtt(&client, &broker, MQTT_PORT) < 0 )
     error_halt();
 
-  digitalWrite(PIN_CONN, HIGH);       // Indicate through LEDs that we have connected successfully.
-
   // Connect to BME280 Package.
   if( connect_bme280() < 0 )
     error_halt();
+
+  digitalWrite(PIN_CONN, HIGH);       // Indicate through LEDs that we have connected successfully.
 }
 
 void loop()
 {
   JSONVar json;
-  json["temperatue"] = bme.readTemperature();
-  json["humidity"] = bme.readHumidity();
-  json["pressure"] = bme.readPressure();
-
-#if(DEBUG==1)
-  json.printTo(Serial);
-#endif
+  json["temperature"] = bme.readTemperature();        // *C
+  json["humidity"] = bme.readHumidity();              // %
+  json["pressure"] = bme.readPressure() / 100.0F;     // hPa
   
-  DBG_PRINTF("[MQTT:%s@%d] PUBLISH \"%s\"\n",broker,MQTT_PORT, JSON.stringify(json).c_str() );
-  client.mqtt.publish( "test_topic", JSON.stringify(json).c_str() );
+  DBG_PRINTF("[MQTT:%s@%d] PUBLISH \"%s\"\n",broker.toString().c_str(),MQTT_PORT, JSON.stringify(json).c_str() );
+  if( !client.mqtt.publish( MQTT_NODE_TOPIC, JSON.stringify(json).c_str() ) )
+    error_halt();
 
   enter_sleep();
 }
@@ -231,9 +233,9 @@ int connect_mqtt(struct client_s* client, IPAddress* broker, int port)
   client->mqtt = PubSubClient(client->wifi);    // Point at WiFi Client
   client->mqtt.setServer(*broker, port);        // Point Client at Broker
 
-  DBG_PRINTF("Connecting to remote MQTT Broker @ %s:%d...\n",broker,port);
+  DBG_PRINTF("Connecting to remote MQTT Broker @ %s:%d...\n",broker->toString().c_str(),port);
   // Attempt to connect to Remote Broker, error return if fails.
-  if(!client->mqtt.connect("esp32-12345"))
+  if(!client->mqtt.connect(MQTT_CLIENT_NAME))
   {
     DBG_PRINTF("Connection Timed Out!\n");
     return -2;
@@ -258,11 +260,12 @@ int connect_bme280(void)
 {
   DBG_PRINTF("Connecting to BME280 Package...\n");
   
-  if( !bme.begin() )
+  if( !bme.begin(0x76) )
   {
     DBG_PRINTF("Failed to connect to package! Sensor ID was %d\n",bme.sensorID());
     return -1;
   }
+  DBG_PRINTF("Connected Succesfully!\n");
 
   delay(100);               // Small delay to ensure everything is ready to go.
 }
