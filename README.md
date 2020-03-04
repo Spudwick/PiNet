@@ -13,7 +13,7 @@ This repository is for all things related to my RPi based home network. The aim 
     * [Changing Hostname](#changing-hostname)
     * [Setting Static IP Address](#setting-static-ip-address)
 * [GitHub](#github)
-  * [Purge Sensitive File from Repo](#purge-sensitive-file-from-repo)
+  * [Purging Sensitive Files](#purging-sensitive-files)
 * [MQTT](#mqtt)
   * [Installing Mosquitto MQTT](#installing-mosquitto-mqtt)
   * [Testing Mosquitto MQTT](#testing-mosquitto-mqtt)
@@ -141,7 +141,7 @@ $ ping www.google.com
 ```
 
 ## GitHub
-### Purge Sensitive File from Repo
+### Purging Sensitive Files
 The following instructions are taken from GitHubs [BFG information](https://help.github.com/en/github/authenticating-to-github/removing-sensitive-data-from-a-repository). 
 
 First of all, make a commit to the Repo that contains the relevant files in a format that you want to keep going forward. Either delete the file completely or replace sensitive information. After this commit the repository files should be as you want it, but the commit history will still show the sensitive data.
