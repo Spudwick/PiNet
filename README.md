@@ -142,13 +142,14 @@ $ ping www.google.com
 
 ## GitHub
 ### Purge Sensitive File from Repo
-First of all, make a commit to the Repo that contaisn the relevant files in a format that you want to keep going forward. This could also mean deleting the file from the repo. After this commit the repo should be as you want it, but the commit history will still show the sensitive files. Then delete the local copy of the repo. This is so that we can checkout a fresh clean copy following the purging and not risk re-checking in the history for the file.
+The following instructions are taken from GitHubs [BFG information](https://help.github.com/en/github/authenticating-to-github/removing-sensitive-data-from-a-repository). 
 
-The following instructions are taken from GitHubs [BFG information](https://help.github.com/en/github/authenticating-to-github/removing-sensitive-data-from-a-repository). First you need to download the BFG jar file from the [BFG website](https://rtyley.github.io/bfg-repo-cleaner/). Next you need to checkout a copy of the raw git repository using the below.
+First of all, make a commit to the Repo that contains the relevant files in a format that you want to keep going forward. Either delete the file completely or replace sensitive information. After this commit the repository files should be as you want it, but the commit history will still show the sensitive data.
+Once this is done you need to download the BFG jar file from the [BFG website](https://rtyley.github.io/bfg-repo-cleaner/) and then checkout a seperate copy of the raw GitHub repository. This can be done as below.
 ```
 $ git clone --mirror https://github.com/Spudwick/PiNet/
 ```
-Now we have the raw repository it is time to purge. To do this we run the below, replacing *<filename>* with the name of the file to delete. Bare in mind that this matches against the name not a full path!
+Now we have the raw repository it is time to purge. To do this we run the below, replacing *<filename>* with the name of the file to delete. Bear in mind that this matches against the name not a full path!
  ```
  $ java -jar ~/Downloads/bfg.jar --delete-files <filename> PiNet.git
  ```
@@ -157,7 +158,7 @@ Now we have the raw repository it is time to purge. To do this we run the below,
  $ git reflog expire --expire=now --all && git gc --prune=now --aggressive
  $ git push
  ```
-Now you can clone a new copy of the repository and continue working. Checking on the GitHub webiste, the file should be purged from all commits, including the file history logs.
+Now you can `cd` into your local working copy and `git pull` the new cleaned branch.
 
 ## MQTT
 ### Installing Mosquitto MQTT
