@@ -349,5 +349,5 @@ For this project I will be using the [PubSubClient library](https://github.com/k
 * `sudo systemctl [start|stop|restart] <service>` - Start, Stop or Restart a service.
 * `sudo systemctl --type=service --state=running` - List all running services.
 * `openssl x509 -in cert.crt -out cert.pem` - Convert `.crt` file to `.pem` file.
-* `git update-index --skip-worktree <path>` - Keep file in Repo but don't track changes.
-* `git update-index --no-skip-worktree <path>` - Resume tracking for file in Repo.
+* `git update-index --skip-worktree <path>` - Keep file in Repo but don't track changes **(Only effects local working branch)**.
+* `git update-index --no-skip-worktree <path>` - Resume tracking for file in Repo **(Only effects local working branch)**.
