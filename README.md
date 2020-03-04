@@ -12,6 +12,8 @@ This repository is for all things related to my RPi based home network. The aim 
     * [Customising Bash Prompt](#customising-bash-prompt)
     * [Changing Hostname](#changing-hostname)
     * [Setting Static IP Address](#setting-static-ip-address)
+* [GitHub](#github)
+  * [Purge Sensitive File from Repo](#purge-sensitive-file-from-repo)
 * [MQTT](#mqtt)
   * [Installing Mosquitto MQTT](#installing-mosquitto-mqtt)
   * [Testing Mosquitto MQTT](#testing-mosquitto-mqtt)
@@ -137,6 +139,25 @@ $ ifconfig
 $ route -n
 $ ping www.google.com
 ```
+
+## GitHub
+### Purge Sensitive File from Repo
+First of all, make a commit to the Repo that contaisn the relevant files in a format that you want to keep going forward. This could also mean deleting the file from the repo. After this commit the repo should be as you want it, but the commit history will still show the sensitive files. Then delete the local copy of the repo. This is so that we can checkout a fresh clean copy following the purging and not risk re-checking in the history for the file.
+
+The following instructions are taken from GitHubs [BFG information](https://help.github.com/en/github/authenticating-to-github/removing-sensitive-data-from-a-repository). First you need to download the BFG jar file from the [BFG website](https://rtyley.github.io/bfg-repo-cleaner/). Next you need to checkout a copy of the raw git repository using the below.
+```
+$ git clone --mirror https://github.com/Spudwick/PiNet/
+```
+Now we have the raw repository it is time to purge. To do this we run the below, replacing *<filename>* with the name of the file to delete. Bare in mind that this matches against the name not a full path!
+ ```
+ $ java -jar ~/Downloads/bfg.jar --delete-files <filename> PiNet.git
+ ```
+ Then run the below to purge all the history logs and check back into the remote repository.
+ ```
+ $ git reflog expire --expire=now --all && git gc --prune=now --aggressive
+ $ git push
+ ```
+Now you can clone a new copy of the repository and continue working. Checking on the GitHub webiste, the file should be purged from all commits, including the file history logs.
 
 ## MQTT
 ### Installing Mosquitto MQTT
