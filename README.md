@@ -158,7 +158,7 @@ Now we have the raw repository it is time to purge. To do this we run the below,
  $ git reflog expire --expire=now --all && git gc --prune=now --aggressive
  $ git push
  ```
-Before you can continue working in any old working copys **YOU MUST BRING IT INLINE WITH THE NEW REMOTE**! This is done using the below. If you don't do this, when you come to push changes back to the remote wou will push back all the old commits containing the deleted files. This will result in commits being duplicated, one with the file and one without. 
+Before you can continue working in any old working copys **YOU MUST BRING IT INLINE WITH THE NEW REMOTE**! This can either be done by deleting and re-cloning the local working copy or by using the below. If you don't do this, when you come to push changes back to the remote wou will push back all the old commits containing the deleted files. This will result in commits being duplicated, one with the file and one without. 
  ```
  $ cd <working_copy>
  $ git fetch origin
