@@ -110,4 +110,3 @@ migrations/
 *.crt
 *.pem
 *.key
-**/private.c
