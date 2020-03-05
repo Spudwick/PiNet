@@ -12,6 +12,8 @@ This repository is for all things related to my RPi based home network. The aim 
     * [Customising Bash Prompt](#customising-bash-prompt)
     * [Changing Hostname](#changing-hostname)
     * [Setting Static IP Address](#setting-static-ip-address)
+* [GitHub](#github)
+  * [Purging Sensitive Files](#purging-sensitive-files)
 * [MQTT](#mqtt)
   * [Installing Mosquitto MQTT](#installing-mosquitto-mqtt)
   * [Testing Mosquitto MQTT](#testing-mosquitto-mqtt)
@@ -137,6 +139,31 @@ $ ifconfig
 $ route -n
 $ ping www.google.com
 ```
+
+## GitHub
+### Purging Sensitive Files
+The following instructions are taken from GitHubs [BFG information](https://help.github.com/en/github/authenticating-to-github/removing-sensitive-data-from-a-repository). 
+
+First of all, make a commit to the Repo that contains the relevant files in a format that you want to keep going forward. Either delete the file completely or replace sensitive information. After this commit the repository files should be as you want it, but the commit history will still show the sensitive data.
+Once this is done you need to download the BFG jar file from the [BFG website](https://rtyley.github.io/bfg-repo-cleaner/) and then checkout a seperate copy of the raw GitHub repository. This can be done as below.
+```
+$ git clone --mirror https://github.com/Spudwick/PiNet/
+```
+Now we have the raw repository it is time to purge. To do this we run the below, replacing *<filename>* with the name of the file to delete. Bear in mind that this matches against the name not a full path!
+ ```
+ $ java -jar ~/Downloads/bfg.jar --delete-files <filename> PiNet.git
+ ```
+ Then run the below to purge all the history logs and check back into the remote repository.
+ ```
+ $ git reflog expire --expire=now --all && git gc --prune=now --aggressive
+ $ git push
+ ```
+Before you can continue working in any old working copys **YOU MUST BRING IT INLINE WITH THE NEW REMOTE**! This can either be done by deleting and re-cloning the local working copy or by using the below. If you don't do this, when you come to push changes back to the remote wou will push back all the old commits containing the deleted files. This will result in commits being duplicated, one with the file and one without. 
+ ```
+ $ cd <working_copy>
+ $ git fetch origin
+ $ git reset --hard origin/master
+ ```
 
 ## MQTT
 ### Installing Mosquitto MQTT
@@ -328,3 +355,5 @@ For this project I will be using the [PubSubClient library](https://github.com/k
 * `sudo systemctl [start|stop|restart] <service>` - Start, Stop or Restart a service.
 * `sudo systemctl --type=service --state=running` - List all running services.
 * `openssl x509 -in cert.crt -out cert.pem` - Convert `.crt` file to `.pem` file.
+* `git update-index --skip-worktree <path>` - Keep file in Repo but don't track changes **(Only effects local working branch)**.
+* `git update-index --no-skip-worktree <path>` - Resume tracking for file in Repo **(Only effects local working branch)**.
