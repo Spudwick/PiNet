@@ -405,7 +405,7 @@ Additional users can be added by appending them to the `users` list.
 
 ### Node-Red Dashboard
 #### Installing the Dashboard
-Complete instructions for Node-Red dashboard can be found on the [Node-Red website](#https://flows.nodered.org/node/node-red-dashboard).
+Complete instructions for Node-Red dashboard can be found on the [Node-Red website](https://flows.nodered.org/node/node-red-dashboard).
 
 Node-Red modules are installed through *menu->Manage pallete*. To install the Dashboard module, search for `node-red-dashboard` and install. It can also be installed through the command line by running the below in the *~/.node-red/* directory.
 ```
