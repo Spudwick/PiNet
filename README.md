@@ -26,6 +26,8 @@ This repository is for all things related to my RPi based home network. The aim 
     * [Certificate Authentication](#certificate-authentication)
 * [Node-Red](#node-red)
   * [Installing Node-Red](#installing-node-red)
+  * [Securing Node-Red](#securing-node-red)
+     * [Configuring TLS](#configuring-tls)
 * [ESP32 Boards](#esp32-boards)
   * [Setting up Arduino IDE](#setting-up-arduino-ide)
   * [Installing MQTT Client Library](#installing-mqtt-client-library)
@@ -334,6 +336,48 @@ $ sudo systemctl enable nodered.service
 $ sudo systemctl start nodered.service
 ```
 The Node-Red editor should now be accessable by navigating to `http://<hostname>:1880` in a web browser.
+### Securing Node-Red
+#### Configuring TLS
+Node-Red can be configured to use TLS. To enable this I followed instructions laid out by [Steves Internet Guide](http://www.steves-internet-guide.com/securing-node-red-ssl/) again.
+
+To start we must create the required TLS private key and certificate. These can be generated as before using the below. It is again worth noting that the **Common Name** field must match the **IP Address** or **Hostname** used to access the server.
+```
+$ openssl genrsa -out node-red-tls-key.pem 2048
+$ openssl req -new -sha256 -key node-red-tls-key.pem -out node-red-tls-csr.pem
+```
+To create the signing request. Then sign it using the same CA generated whilst [configuring the Mosquitto Broker for TLS](#configuring-the-broker).
+```
+$ openssl x509 -req -in node-red-tls-csr.pem -CA ca.crt -CAkey ca.key -CAcreateserial -out node-red-tls-CA-crt.pem -days 360
+```
+I then copied the Key and Certificate files to a new folder under the *~/.node-red/* directory.
+
+We then need to actually configure Node-Red to use TLS. This is done by modifying the Node-Red configuration file found at *~/.node-red/settings.js*.
+First we must uncomment the below code segments.
+```
+// The `https` setting requires the `fs` module. Uncomment the following
+// to make it available:
+var fs = require("fs");
+```
+```
+// The following property can be used to enable HTTPS
+// See http://nodejs.org/api/https.html#https_https_createserver_options_requestlistener
+// for details on its contents.
+// See the comment at the top of this file on how to load the `fs` module used by
+// this setting.
+//
+https: {
+   key: fs.readFileSync('privatekey.pem'),
+   cert: fs.readFileSync('certificate.pem')
+},
+```
+And modify the `fs.readFileSync('...')` lines to point to our newly generated Private Key and Certificate.
+
+To test you can then stop the running instance of the Node-Red service and run manually using the below. `node-red-log` can also be used to attach to the running Node-Red service's log output.
+```
+$ sudo systemctl stop nodered.service
+$ node-red -s settings.js
+```
+You should now only be able to connect to the Node-Red server using `https://192.168.0.200:1880`. Upon connecting you should get a warning about **Your connection to this website isn't secure**. This is because your browser doesn't recognise the CA used to sign the TLS Certificate.
 
 ## ESP32 Boards
 ### Setting up Arduino IDE
