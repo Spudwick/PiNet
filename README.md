@@ -42,7 +42,7 @@ This repository is for all things related to my RPi based home network. The aim 
 Use `fdisk` to delete all existing partitions and format for FAT32.
 Use `fdisk -l` to identify device. Then use following commands to delete partitions and format card.
 ```
-$ fdisk /dev/mmcblk0
+$ sudo fdisk /dev/mmcblk0
 ```
 Delete all existing partitions:
 ```
@@ -100,6 +100,72 @@ Once Raspbian has fully installed, reboot and login as the default user `pi` (de
 $ sudo apt-get update
 $ sudo apt-get upgrade
 ```
+#### Booting From USB Drive with BerryBoot
+The simplist way to configure BerryBoot to boot from a USB attached drive is to just have it connected when you first boot BerryBoot. You can then select it as the target drive. This does have the downside that the entire drive is used for the *Boot* and *Data* partitions.
+
+After some research I came across this post by [Norbert](https://www.raspberrypi.org/forums/viewtopic.php?t=238792) where he describes how to reconfigure BerryBoot after installation to boot from a partition on a USB attached drive.
+First we must create the new partition and format it ready for BerryBoot to use. We can follow the same basic steps as when [formatting the SD card to install BerryBoot](#formatting-sd-card) with a few alterations. First we select the USB Drive as the `fdisk` target rather than the SD card.
+```
+$ sudo fdisk /dev/sda
+```
+```
+Command (m for help): d
+Selected partition 1
+Partition 1 has been deleted.
+```
+Then we create a limited size partition, I used 30GB as this was the same size as the SD card partition I'm replacing.
+```
+Command (m for help): n
+Partition type
+   p   primary (0 primary, 0 extended, 4 free)
+   e   extended (container for logical partitions)
+Select (default p): p
+Partition number (1-4, default 1): 1
+First sector (2048-31116287, default 2048): 
+Last sector, +sectors or +size{K,M,G,T,P} (2048-31116287, default 31116287): +30G
+
+Created a new partition 1 of type 'Linux' and of size 30 GiB.
+```
+And we set it's type to *Linux* to be formated as `ext4`.
+```
+Command (m for help): t
+Selected partition 1
+Partition type (type L to list all types): 83
+Changed type of partition 'Linux' to 'Linux'.
+```
+And finally write the partition to the disk.
+```
+Command (m for help): w
+The partition table has been altered.
+Calling ioctl() to re-read partition table.
+Syncing disks.
+```
+Now we can format the partion as `ext4` using `mkfs`.
+```
+$ sudo mkfs.ext4 /dev/sda1
+```
+Finally we can give the partition a meaningful *Label* using:
+```
+$ sudo e2label /dev/sda1 berryboot_HDD
+```
+Now the partition should show up under `lsblk` and running `blkid` should show something like below.
+```
+$ sudo blkid /dev/sda1
+/dev/sda1: LABEL="berryboot_HDD" UUID="42a9ceda-a391-41fe-b861-3334426d08b8" TYPE="ext4" PARTUUID="278eb1e0-01"
+```
+We then need to copy the contents of the `mmcblk0p2` partition into out new `sda1` partition. This can be done using `rsync` as below.
+```
+$ sudo mkdir /mnt/berryboot_SD
+$ sudo mount /dev/mmcblk0p2 /mnt/berryboot_SD
+$ sudo mkdir /mnt/berryboot_HDD
+$ sudo mount /dev/sda1 /mnt/berryboot_HDD
+$ sudo rsync -ax --delete /mnt/berryboot_SD/ /mnt/berryboot_HDD/
+```
+The final step is to configure BerryBoot to use the new HDD partition rather than the old SD card partition. This is done by modifying the */boot/cmdline.txt* file, changing the `datadev` item as below.
+```
+datadev=/dev/sda1
+```
+The RPi can then be rebooted and BerryBoot should boot the OS from the HDD.
 
 ### Basic Raspbian Setup
 #### Enabling SSH
