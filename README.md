@@ -28,6 +28,10 @@ This repository is for all things related to my RPi based home network. The aim 
   * [Installing Node-Red](#installing-node-red)
   * [Securing Node-Red](#securing-node-red)
      * [Configuring TLS](#configuring-tls)
+     * [Flow Editor Username and Password Authentication](#flow-editor-username-and-password-authentication)
+  * [Node-Red Dashboard](#node-red-dashboard)
+     * [Installing the Dashboard](#installing-the-dashboard)
+     * [Dashboard Username and Password Authentication](#dashboard-username-and-password-authentication)
 * [ESP32 Boards](#esp32-boards)
   * [Setting up Arduino IDE](#setting-up-arduino-ide)
   * [Installing MQTT Client Library](#installing-mqtt-client-library)
@@ -378,6 +382,45 @@ $ sudo systemctl stop nodered.service
 $ node-red -s settings.js
 ```
 You should now only be able to connect to the Node-Red server using `https://192.168.0.200:1880`. Upon connecting you should get a warning about **Your connection to this website isn't secure**. This is because your browser doesn't recognise the CA used to sign the TLS Certificate.
+#### Flow Editor Username and Password Authentication
+Requiring a user to sign in to access the flow editor is again a simple task of modifying some fields in the *settings.js* file. This time we need to uncomment the below segment.
+```
+// To password protect the Node-RED editor and admin API, the following
+// property can be used. See http://nodered.org/docs/security.html for details.
+adminAuth: {
+   type: "credentials",
+   users: [{
+      username: "admin",
+      password: "$2a$08$BHUlBwB9FpqNwtKwf3A8zONkn1NS0vzb702YV5cLquOMo0Wfo57im",
+      permissions: "*"
+   }]
+},
+```
+To generate a new password for the *admin* account use the `node-red-admin` utility.
+```
+$ node-red-admin hash-pw
+```
+This will generate a new password hash that can be copied into the `password` field in the *settings.js* file.
+Additional users can be added by appending them to the `users` list.
+
+### Node-Red Dashboard
+#### Installing the Dashboard
+Complete instructions for Node-Red dashboard can be found on the [Node-Red website](#https://flows.nodered.org/node/node-red-dashboard).
+
+Node-Red modules are installed through *menu->Manage pallete*. To install the Dashboard module, search for `node-red-dashboard` and install. It can also be installed through the command line by running the below in the *~/.node-red/* directory.
+```
+$ npm i node-red-dashboard
+```
+#### Dashboard Username and Password Authentication
+To require usert ot login when accessing the Dashboard page, the below segment of the *settings.js* file must be uncommented.
+```
+// To password protect the node-defined HTTP endpoints (httpNodeRoot), or
+// the static content (httpStatic), the following properties can be used.
+// The pass field is a bcrypt hash of the password.
+// See http://nodered.org/docs/security.html#generating-the-password-hash
+httpNodeAuth: {user:"user",pass:"$2a$08$zZWtXTja0fB1pzD4sHCMyOCMYz2Z6dNbM6tl8sJogENOMcxWV9DN."},
+```
+Again, the password hash is generated using `node-red-admin hash-pw`. Note that in this case only a single user account is allowed.
 
 ## ESP32 Boards
 ### Setting up Arduino IDE
