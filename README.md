@@ -7,6 +7,7 @@ This repository is for all things related to my RPi based home network. The aim 
 * [RPi Setup](#rpi-setup)
   * [Formatting SD Card](#formatting-sd-card)
   * [Installing BerryBoot and Raspbian](#installing-berryboot-and-raspbian)
+    * [Booting From USB Drive with BerryBoot](#booting-from-usb-drive-with-berryboot)
   * [Basic Raspbian Setup](#basic-raspbian-setup)
     * [Enabling SSH](#enabling-ssh)
     * [Customising Bash Prompt](#customising-bash-prompt)
