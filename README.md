@@ -104,7 +104,7 @@ $ sudo apt-get upgrade
 #### Booting From USB Drive with BerryBoot
 The simplist way to configure BerryBoot to boot from a USB attached drive is to just have it connected when you first boot BerryBoot. You can then select it as the target drive. This does have the downside that the entire drive is used for the *Boot* and *Data* partitions.
 
-After some research I came across this post by [Norbert](https://www.raspberrypi.org/forums/viewtopic.php?t=238792) where he describes how to reconfigure BerryBoot after installation to boot from a partition on a USB attached drive.
+After some research I came across this post by [Norbert](https://www.raspberrypi.org/forums/viewtopic.php?t=238792) where he describes how to reconfigure BerryBoot after installation to boot the OS from a partition on a USB attached drive. The bootloader still lives and runs from the SD card however.
 First we must create the new partition and format it ready for BerryBoot to use. We can follow the same basic steps as when [formatting the SD card to install BerryBoot](#formatting-sd-card) with a few alterations. First we select the USB Drive as the `fdisk` target rather than the SD card.
 ```
 $ sudo fdisk /dev/sda
@@ -411,16 +411,16 @@ The Node-Red editor should now be accessable by navigating to `http://<hostname>
 #### Configuring TLS
 Node-Red can be configured to use TLS. To enable this I followed instructions laid out by [Steves Internet Guide](http://www.steves-internet-guide.com/securing-node-red-ssl/) again.
 
-To start we must create the required TLS private key and certificate. These can be generated as before using the below. It is again worth noting that the **Common Name** field must match the **IP Address** or **Hostname** used to access the server.
+To start we must create the required TLS private key and certificate. Node-Red requires `.pem` files which can be generated in a similar way as we have done before. A signing request is generated as below, noting again that the **Common Name** field must match the **IP Address** or **Hostname** used to access the server.
 ```
 $ openssl genrsa -out node-red-tls-key.pem 2048
 $ openssl req -new -sha256 -key node-red-tls-key.pem -out node-red-tls-csr.pem
 ```
-To create the signing request. Then sign it using the same CA generated whilst [configuring the Mosquitto Broker for TLS](#configuring-the-broker).
+We then sign it using the same CA generated whilst [configuring the Mosquitto Broker for TLS](#configuring-the-broker).
 ```
 $ openssl x509 -req -in node-red-tls-csr.pem -CA ca.crt -CAkey ca.key -CAcreateserial -out node-red-tls-CA-crt.pem -days 360
 ```
-I then copied the Key and Certificate files to a new folder under the *~/.node-red/* directory.
+The Key and Certificate files can then be copied into a new folder under the *~/.node-red/* directory.
 
 We then need to actually configure Node-Red to use TLS. This is done by modifying the Node-Red configuration file found at *~/.node-red/settings.js*.
 First we must uncomment the below code segments.
