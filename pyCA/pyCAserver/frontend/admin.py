@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
-from django.core import urlresolvers
+from django.urls import reverse
+from django.utils.html import format_html
 
 from .models import CAModel, CSRModel, CRTModel
 
@@ -26,7 +27,7 @@ class CAAdmin(admin.ModelAdmin):
 
 class CSRAdmin(admin.ModelAdmin):
 	list_display = ('id', '__str__', 'ca', 'owner', 'created')
-	search_fields = ('owner__username',)
+	search_fields = ('owner__username','csrfile')
 	list_filter = (OwnerFilter,)
 
 
@@ -34,10 +35,6 @@ class CRTAdmin(admin.ModelAdmin):
 	list_display = ('id', '__str__', 'csr', 'owner', 'created')
 	search_fields = ('owner__username',)
 	list_filter = (OwnerFilter,)
-
-	def link_to_user(self, obj):
-		link = reverse("admin:auth_user_change", args=[obj.user.id])
-		return format_html('<a href="{}">Edit {}</a>', link, obj.user.username)
 
 
 admin.site.register(CAModel, CAAdmin)
