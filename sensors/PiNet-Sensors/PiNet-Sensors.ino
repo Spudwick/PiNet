@@ -176,6 +176,7 @@ int connect_wifi(ssid_s* ssids, int cnt)
   }
 
   // If we get here, we didn't match any known and scanned SSIDs, in this case error return.
+  DBG_PRINTF("No matching SSIDs found!\n");
   return -1;
 
 _connect:
