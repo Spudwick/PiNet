@@ -28,11 +28,15 @@ This repository is for all things related to my RPi based home network. The aim 
 * [Node-Red](#node-red)
   * [Installing Node-Red](#installing-node-red)
   * [Securing Node-Red](#securing-node-red)
-     * [Configuring TLS](#configuring-tls)
-     * [Flow Editor Username and Password Authentication](#flow-editor-username-and-password-authentication)
+    * [Configuring TLS](#configuring-tls)
+    * [Flow Editor Username and Password Authentication](#flow-editor-username-and-password-authentication)
   * [Node-Red Dashboard](#node-red-dashboard)
-     * [Installing the Dashboard](#installing-the-dashboard)
-     * [Dashboard Username and Password Authentication](#dashboard-username-and-password-authentication)
+    * [Installing the Dashboard](#installing-the-dashboard)
+    * [Dashboard Username and Password Authentication](#dashboard-username-and-password-authentication)
+* [MariaDB](#mariadb)
+  * [Configuring MariaDB](#configuring-mariadb)
+    * [Configure Listening Interfaces](#configure-listening-interfaces)
+    * [Managing Users and Their Permissions](#managing-users-and-their-permissions)
 * [ESP32 Boards](#esp32-boards)
   * [Setting up Arduino IDE](#setting-up-arduino-ide)
   * [Installing MQTT Client Library](#installing-mqtt-client-library)
@@ -488,6 +492,72 @@ To require usert ot login when accessing the Dashboard page, the below segment o
 httpNodeAuth: {user:"user",pass:"$2a$08$zZWtXTja0fB1pzD4sHCMyOCMYz2Z6dNbM6tl8sJogENOMcxWV9DN."},
 ```
 Again, the password hash is generated using `node-red-admin hash-pw`. Note that in this case only a single user account is allowed.
+
+## MariaDB
+MariaDB is a database system very much related to mySQL. It is meant to be more efficient hence me choosing to use it. It can be installed simply using:
+```
+$ sudo apt-get install mariadb-server
+$ sudo mysql_secure_installation
+```
+The `mysql_secure_installation` configures the servers security options. I found it asked for root credentials on logging in, which I hadn't been able to set yet. Running the script without `sudo` always resulted in **ERROR 1698 (28000): Access denied for user 'root'@'localhost'** whether I entered a password or not. Running with `sudo` allowed me to login without a password and then set one as part of the secure install script.
+
+You can then test the install by running the below.
+```
+$ sudo mysql -u root -p
+```
+### Configuring MariaDB
+#### Configure Listening Interfaces
+Initially MariaDB is only configured to listen on `localhost`. This can be changed by editing the line below and */etc/mysql/mariadb.conf.d/50-server.cnf* and restarting the service. `0.0.0.0` can be to listen on all interfaces.
+```
+# Instead of skip-networking the default is now to listen only on
+# localhost which is more compatible and is not less secure.
+bind-address            = 127.0.0.1
+```
+MariaDB (and mySQL) both listen on port `3306` by default. This can be changed too by editing the below in the same file as above.
+```
+#
+# * Basic Settings
+#
+user                    = mysql
+pid-file                = /run/mysqld/mysqld.pid
+socket                  = /run/mysqld/mysqld.sock
+#port                   = 3306
+basedir                 = /usr
+datadir                 = /var/lib/mysql
+tmpdir                  = /tmp
+lc-messages-dir         = /usr/share/mysql
+#skip-external-locking
+```
+The setup of databases and tables is handled within the client using specific commands. Some are gone through here, but [this page](http://g2pc1.bu.edu/~qzpeng/manual/MySQL%20Commands.htm) contains a list of some of the more common ones.
+#### Managing Users and Their Permissions
+As part of the `mysql_secure_installation` script, you can disable remote access for the `root` user. In this case you won't be able to login to the server remotely until you create a new User. To do this you need to login to the server locally using root, as below.
+```
+$ sudo mysql -u root -p
+```
+Then, the SQL command to add a user is:
+```
+MariaDB> GRANT ALL PRIVILEGES ON <database>.<table> TO '<username>'@'<host>' IDENTIFIED BY '<password>' WITH GRANT OPTION;
+```
+With regards to the **database** and **table** fields, `*` can be used to indicate *all*. Likewise `%` can be used as a wildcard for the **host** field. Thus, to give a user **Read Only** access to all tables in a specific database you would use:
+```
+MariaDB> GRANT SELECT ON test_database.* TO 'test'@'192.168.0.%' IDENTIFIED BY 'test_password' WITH GRANT OPTION;
+```
+Or to grant a user **All Priviledges** to all databases and tables from any host, you would use:
+```
+MariaDB> GRANT ALL PRIVILEGES ON *.* TO 'test'@'%' IDENTIFIED BY 'test_password' WITH GRANT OPTION;
+```
+To list a users priviledges you can use the below. The **host** field can be omitted to list permissions from all hosts.
+```
+MariaDB> SHOW GRANTS FOR '<username>'@'<host>';
+```
+And to revoke all permissions for a user you would use:
+```
+MariaDB> REVOKE ALL PRIVILEGES, GRANT OPTION FROM '<username>'@'%';
+```
+It is worth noting that this doesn't actually remove the User, just their permissions. They will still be able to log into the server. To completely remove the user you would use:
+```
+MariaDB> DROP USER <username>
+```
 
 ## ESP32 Boards
 ### Setting up Arduino IDE
