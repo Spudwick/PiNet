@@ -37,6 +37,7 @@ This repository is for all things related to my RPi based home network. The aim 
   * [Configuring MariaDB](#configuring-mariadb)
     * [Configuring Interfaces](#configuring-interfaces)
     * [Changing Database Storage Location](#changing-database-storage-location)
+    * [Configuring MariaDB to use TLS](#configuring-mariadb-to-use-tls)
     * [Managing Users and Permissions](#managing-users-and-permissions)
     * [Managing Databases and Tables](#managing-databases-and-tables)
 * [ESP32 Boards](#esp32-boards)
@@ -515,7 +516,7 @@ Initially MariaDB is only configured to listen on `localhost`. This can be chang
 # localhost which is more compatible and is not less secure.
 bind-address            = 127.0.0.1
 ```
-MariaDB (and mySQL) both listen on port `3306` by default. This can be changed too by editing the below in the same file as above.
+MariaDB (and mySQL) listens on port `3306` by default. This can be changed too by editing the below in the same file as above.
 ```
 #
 # * Basic Settings
@@ -560,6 +561,52 @@ Finally we must initialise the new database directory, restart the MariaDB servi
 $ sudo mysql_install_db
 $ sudo systemctl start mariadb.service
 $ sudo mysql_secure_installation
+```
+#### Configuring MariaDB to use TLS
+Helpfull instruction for configuring TLS can be found on the [MariaDB webiste](https://mariadb.com/kb/en/securing-connections-for-client-and-server/).
+
+First we need to generate a Server Key Pair and Certificate just as when [configuring Mosquitto to use TLS](#configuring-the-broker). Note that these need to be in the `.pem` format. It is also important to ensure that the `mysql` user has permissions to read the files.
+
+We then configure MariaDB to use TLS by specifying the paths to the files generated above in the */etc/mysql/mariadb.conf.d/50-server.cnf* config file.
+```
+#
+# * Security Features
+#
+# Read the manual, too, if you want chroot!
+#chroot = /var/lib/mysql/
+#
+# For generating SSL certificates you can use for example the GUI tool "tinyca".
+#
+ssl-ca = /etc/mysql/certs/ca.pem
+ssl-cert = /etc/mysql/certs/mariadb-svr-crt.pem
+ssl-key = /etc/mysql/certs/mariadb-svr-key.pem
+#
+# Accept only connections using the latest and most secure TLS protocol version.
+# ..when MariaDB is compiled with OpenSSL:
+#ssl-cipher = TLSv1.2
+# ..when MariaDB is compiled with YaSSL (default in Debian):
+ssl = on
+```
+As my version of MariaDB uses *YaSSL* I used the `ssl` option. Some other versions of MariaDB may need you to use `ssl-cipher` instead.
+
+Restart the MariaDB service using `sudo systemctl restart mariadb.service` and login to the server using the root user to check that *TLS* was configured successfully.
+```
+MariaDB> SHOW GLOBAL VARIABLES LIKE 'have_ssl';
++---------------+-------+
+| Variable_name | Value |
++---------------+-------+
+| have_ssl      | YES   |
++---------------+-------+
+```
+If this is still returning *Disabled*, check the MariaDB log files to ensure there were no errors whilst setting up *TLS*. I found setting the, in my case, un-needed `ssl-cipher` option caused errors that prevented *TLS* being setup but didn't prevent the service from starting.
+
+Now to connect to the server from a remote client using *TLS* we can run:
+```
+$ sudo mysql --ssl-ca=ca.crt --ssl-verify-server-cert -h <host> -u <username> -p
+```
+The server can be configured to require a specific user to connect using *TLS*, [amongst other things](https://mariadb.com/kb/en/securing-connections-for-client-and-server/#requiring-tls), by doing the following. `%` can be used as a wildcard in the host field.
+```
+MariaDB> ALTER USER '<username>'@'<host>' REQUIRE SSL;
 ```
 #### Managing Users and Permissions
 As part of the `mysql_secure_installation` script, you can disable remote access for the `root` user. In this case you won't be able to login to the server remotely until you create a new User. To do this you need to login to the server locally using root, as below.
