@@ -36,7 +36,8 @@ This repository is for all things related to my RPi based home network. The aim 
 * [MariaDB](#mariadb)
   * [Configuring MariaDB](#configuring-mariadb)
     * [Configure Listening Interfaces](#configure-listening-interfaces)
-    * [Managing Users and Their Permissions](#managing-users-and-their-permissions)
+    * [Managing Users and Permissions](#managing-users-and-permissions)
+    * [Managing Databases and Tables](#managing-databases-and-tables)
 * [ESP32 Boards](#esp32-boards)
   * [Setting up Arduino IDE](#setting-up-arduino-ide)
   * [Installing MQTT Client Library](#installing-mqtt-client-library)
@@ -528,8 +529,13 @@ tmpdir                  = /tmp
 lc-messages-dir         = /usr/share/mysql
 #skip-external-locking
 ```
-The setup of databases and tables is handled within the client using specific commands. Some are gone through here, but [this page](http://g2pc1.bu.edu/~qzpeng/manual/MySQL%20Commands.htm) contains a list of some of the more common ones.
-#### Managing Users and Their Permissions
+Assuming you have a User configured with the correct permissions, local and remote clients should be able to connect as below.
+```
+$ sudo mysql -P <port> -u <username> -p
+$ sudo mysql -h <host> -P <port> -u <username> -p
+```
+The setup of databases and tables is handled within the client using specific commands. Some are gone through here, but [this page](http://g2pc1.bu.edu/~qzpeng/manual/MySQL%20Commands.htm) contains a list of some helpfull ones.
+#### Managing Users and Permissions
 As part of the `mysql_secure_installation` script, you can disable remote access for the `root` user. In this case you won't be able to login to the server remotely until you create a new User. To do this you need to login to the server locally using root, as below.
 ```
 $ sudo mysql -u root -p
@@ -557,6 +563,29 @@ MariaDB> REVOKE ALL PRIVILEGES, GRANT OPTION FROM '<username>'@'%';
 It is worth noting that this doesn't actually remove the User, just their permissions. They will still be able to log into the server. To completely remove the user you would use:
 ```
 MariaDB> DROP USER <username>
+```
+#### Managing Databases and Tables
+A new database can be added using the command below.
+```
+MariaDB> CREATE DATABASE <database>;
+```
+A table is then added to a database using:
+```
+MariaDB> CREATE TABLE <table> (
+    -> <column> <data_type>,
+    -> ...
+    ->);
+```
+[W3 Schools](https://www.w3schools.com/sql/sql_datatypes.asp) has a very helpfull page that lists all the possible datatypes.
+
+New tables can also be made using Sub-Sets of an existing table using the below.
+```
+MariaDB> CREATE TABLE <dest_table> AS SELECT <src_column>, ... FROM <src_table>;
+```
+Tables and Databases can then be deleted using the following.
+```
+MariaDB> DROP TABLE <table>
+MariaDB> DROP DATABASE <database>
 ```
 
 ## ESP32 Boards
