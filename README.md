@@ -35,7 +35,8 @@ This repository is for all things related to my RPi based home network. The aim 
     * [Dashboard Username and Password Authentication](#dashboard-username-and-password-authentication)
 * [MariaDB](#mariadb)
   * [Configuring MariaDB](#configuring-mariadb)
-    * [Configure Listening Interfaces](#configure-listening-interfaces)
+    * [Configuring Interfaces](#configuring-interfaces)
+    * [Changing Database Storage Location](#changing-database-storage-location)
     * [Managing Users and Permissions](#managing-users-and-permissions)
     * [Managing Databases and Tables](#managing-databases-and-tables)
 * [ESP32 Boards](#esp32-boards)
@@ -507,8 +508,8 @@ You can then test the install by running the below.
 $ sudo mysql -u root -p
 ```
 ### Configuring MariaDB
-#### Configure Listening Interfaces
-Initially MariaDB is only configured to listen on `localhost`. This can be changed by editing the line below and */etc/mysql/mariadb.conf.d/50-server.cnf* and restarting the service. `0.0.0.0` can be to listen on all interfaces.
+#### Configuring Interfaces
+Initially MariaDB is only configured to listen on `localhost`. This can be changed by editing the line below in */etc/mysql/mariadb.conf.d/50-server.cnf* and restarting the service. `0.0.0.0` can be used to listen on all interfaces and more than one `bind-address` line can be used to specify a selection of interfaces.
 ```
 # Instead of skip-networking the default is now to listen only on
 # localhost which is more compatible and is not less secure.
@@ -535,6 +536,31 @@ $ sudo mysql -P <port> -u <username> -p
 $ sudo mysql -h <host> -P <port> -u <username> -p
 ```
 The setup of databases and tables is handled within the client using specific commands. Some are gone through here, but [this page](http://g2pc1.bu.edu/~qzpeng/manual/MySQL%20Commands.htm) contains a list of some helpfull ones.
+#### Changing Database Storage Location
+As part of the PiNet project, I want to store the databases files on a partition on an exernal hard drive mounted to the the RPi. This is auto-mounted to */mnt/db_store/* by adding the following to */etc/fstab*.
+```
+LABEL=db_store  /mnt/db_store   ext4    defaults          0       2
+```
+The folder which will be used to store the database must have owners and permissions matching that of the default Data Directory used by MariaDB.
+```
+$ ls -al /var/lib/mysql
+drwxr-xr-x  5 mysql mysql     4096 Mar 15 16:08 .
+```
+Once this is setup, we need to configure MariaDB to use the new directory. First, stop the MariaDB service, using `sudo systemctl stop mariadb.service`, and then modify the `datadir` feild in */etc/mysql/mariadb.conf.d/50-server.cnf* to point to our new directory.
+```
+#
+# * Basic Settings
+#
+...
+datadir                 = /mnt/db_store/mariadb
+...
+```
+Finally we must initialise the new database directory, restart the MariaDB service and re-run the secure install proccess.
+```
+$ sudo mysql_install_db
+$ sudo systemctl start mariadb.service
+$ sudo mysql_secure_installation
+```
 #### Managing Users and Permissions
 As part of the `mysql_secure_installation` script, you can disable remote access for the `root` user. In this case you won't be able to login to the server remotely until you create a new User. To do this you need to login to the server locally using root, as below.
 ```
