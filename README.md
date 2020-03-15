@@ -562,7 +562,7 @@ MariaDB> REVOKE ALL PRIVILEGES, GRANT OPTION FROM '<username>'@'%';
 ```
 It is worth noting that this doesn't actually remove the User, just their permissions. They will still be able to log into the server. To completely remove the user you would use:
 ```
-MariaDB> DROP USER <username>
+MariaDB> DROP USER <username>;
 ```
 #### Managing Databases and Tables
 A new database can be added using the command below.
@@ -571,6 +571,7 @@ MariaDB> CREATE DATABASE <database>;
 ```
 A table is then added to a database using:
 ```
+MariaDB> USE <database>;
 MariaDB> CREATE TABLE <table> (
     -> <column> <data_type>,
     -> ...
@@ -580,12 +581,16 @@ MariaDB> CREATE TABLE <table> (
 
 New tables can also be made using Sub-Sets of an existing table using the below.
 ```
+MariaDB> USE <database>;
 MariaDB> CREATE TABLE <dest_table> AS SELECT <src_column>, ... FROM <src_table>;
 ```
 Tables and Databases can then be deleted using the following.
 ```
-MariaDB> DROP TABLE <table>
-MariaDB> DROP DATABASE <database>
+MariaDB> USE <database>;
+MariaDB> DROP TABLE <table>;
+```
+```
+MariaDB> DROP DATABASE <database>;
 ```
 
 ## ESP32 Boards
