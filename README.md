@@ -38,6 +38,7 @@ This repository is for all things related to my RPi based home network. The aim 
     * [Configuring Interfaces](#configuring-interfaces)
     * [Changing Database Storage Location](#changing-database-storage-location)
     * [Configuring MariaDB to use TLS](#configuring-mariadb-to-use-tls)
+  * [Using MariaDB](#using-mariadb)
     * [Managing Users and Permissions](#managing-users-and-permissions)
     * [Managing Databases and Tables](#managing-databases-and-tables)
 * [ESP32 Boards](#esp32-boards)
@@ -608,6 +609,7 @@ The server can be configured to require a specific user to connect using *TLS*, 
 ```
 MariaDB> ALTER USER '<username>'@'<host>' REQUIRE SSL;
 ```
+### Using MariaDB
 #### Managing Users and Permissions
 As part of the `mysql_secure_installation` script, you can disable remote access for the `root` user. In this case you won't be able to login to the server remotely until you create a new User. To do this you need to login to the server locally using root, as below.
 ```
