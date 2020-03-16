@@ -523,7 +523,7 @@ MariaDB (and mySQL) listens on port `3306` by default. This can be changed too b
 # * Basic Settings
 #
 ...
-datadir                 = /var/lib/mysql
+#port                   = 3306
 ...
 ```
 Assuming you have a User configured with the correct permissions, local and remote clients should be able to connect as below.
