@@ -37,7 +37,7 @@ class CAFilter(admin.SimpleListFilter):
 
 
 class CAAdmin(admin.ModelAdmin):
-	list_display = ('id', '__str__', 'keyfile', 'crtfile')
+	list_display = ('id', '__str__', 'keypath', 'crtpath')
 
 
 class CSRAdmin(admin.ModelAdmin):

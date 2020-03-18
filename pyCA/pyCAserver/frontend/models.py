@@ -47,16 +47,16 @@ class CAModel(models.Model):
 	created = models.DateTimeField(auto_now_add=True)
 
 	name = models.CharField(max_length=100, unique=True)
-	keyfile = models.FileField(	verbose_name="Key File",
-								upload_to=get_uuid_upload_path_ca,
-								validators=[FileExtensionValidator(allowed_extensions=['key'])],
-								blank=True,
-								default=None)
-	crtfile = models.FileField(	verbose_name="Certificate File",
-								upload_to=get_uuid_upload_path_ca,
-								validators=[FileExtensionValidator(allowed_extensions=['crt'])],
-								blank=True,
-								default=None)
+	keypath = models.FilePathField(	verbose_name="CA Key File",
+									path=settings.MEDIA_ROOT + "local/",
+									match=".*\.crt",
+									blank=True,
+									editable=False)
+	crtpath = models.FilePathField(	verbose_name="CA Certificate File",
+									path=settings.MEDIA_ROOT + "local/",
+									match=".*\.crt",
+									blank=True,
+									editable=False)
 
 	class Meta:
 		ordering = ['created']
@@ -67,13 +67,16 @@ class CAModel(models.Model):
 		return str(self.name)
 
 	def save(self, *args, **kwargs):
-		if self.keyfile == None:
-			self.keyfile = generate_new_ca_key()
-			self.crtfile = generate_new_ca_crt(self.keyfile)
-		elif self.crtfile == None:
-			self.crtfile = generate_new_ca_crt(self.keyfile)
+		print(self.keypath)
+		print(self.crtpath)
 
-		print(type(self.keyfile))
+		if self.keypath == "":
+			self.keypath = generate_new_ca_key()
+			self.crtpath = generate_new_ca_crt(self.keypath)
+		elif self.crtpath == "":
+			self.crtpath = generate_new_ca_crt(self.keypath)
+
+		print(self.keypath)
 
 		super().save()
 
@@ -96,7 +99,7 @@ class CSRModel(models.Model):
 		verbose_name_plural = 'Signing Requests'
 
 	def __str__(self):
-		return os.path.basename(self.csrfile.name)
+		return self.csrfile.name
 
 
 class CRTModel(models.Model):
@@ -125,7 +128,7 @@ class CRTModel(models.Model):
 		verbose_name_plural = 'Certificates'
 	
 	def __str__(self):
-		return os.path.basename(str(self.crtfilepath))
+		return str(self.crtfilepath)
 
 	def save(self, *args, **kwargs):
 		self.owner = self.csr.owner
@@ -139,9 +142,10 @@ class CRTModel(models.Model):
 
 @receiver(post_delete, sender=CAModel)
 def CAModel_post_delete(sender, instance, **kwargs):
-	print("DELETING CA FILES")
-	instance.keyfile.delete(False)
-	instance.crtfile.delete(False)
+	if not instance.keypath == "":
+		os.remove(instance.keypath)
+	if not instance.crtpath == "":
+		os.remove(instance.crtpath)
 
 @receiver(post_delete, sender=CSRModel)
 def CSRModel_post_delete(sender, instance, **kwargs):
