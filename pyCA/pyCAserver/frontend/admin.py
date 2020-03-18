@@ -21,20 +21,35 @@ class OwnerFilter(admin.SimpleListFilter):
 			return queryset.filter(owner__username=self.value())
 
 
+class CAFilter(admin.SimpleListFilter):
+	title = "Certificate Authority"
+	parameter_name = "ca"
+
+	def lookups(self, request, model_admin):
+		users = [(str(ca), str(ca)) for ca in CAModel.objects.all()]
+		return users
+
+	def queryset(self, request, queryset):
+		if self.value() == None:
+			return queryset
+		else:
+			return queryset.filter(ca__name=self.value())
+
+
 class CAAdmin(admin.ModelAdmin):
-	list_display = ('id', '__str__', 'keypath', 'crtpath')
+	list_display = ('id', '__str__', 'keyfile', 'crtfile')
 
 
 class CSRAdmin(admin.ModelAdmin):
 	list_display = ('id', '__str__', 'ca', 'owner', 'created')
-	search_fields = ('owner__username','csrfile')
-	list_filter = (OwnerFilter,)
+	search_fields = ('owner__username', 'csrfile')
+	list_filter = (OwnerFilter, CAFilter)
 
 
 class CRTAdmin(admin.ModelAdmin):
-	list_display = ('id', '__str__', 'csr', 'owner', 'created')
+	list_display = ('id', '__str__', 'csr', 'ca', 'owner', 'created')
 	search_fields = ('owner__username',)
-	list_filter = (OwnerFilter,)
+	list_filter = (OwnerFilter, CAFilter)
 
 
 admin.site.register(CAModel, CAAdmin)

@@ -8,13 +8,16 @@ from django.dispatch import receiver
 from django.db import models
 
 
-def get_uuid_upload_path(inst, filename):
+def get_uuid_upload_path(inst, filename, extra=""):
 	ext = filename.split('.')[1]
-	return "upload/" + str(uuid.uuid4()) + "." + ext
+	return "upload/" + extra + str(uuid.uuid4()) + "." + ext
 
-def get_uuid_local_path(inst, filename):
+def get_uuid_upload_path_ca(inst, filename):
+	return get_uuid_upload_path(inst, filename, extra="ca/")
+
+def get_uuid_local_path(inst, filename, extra=""):
 	ext = filename.split('.')[1]
-	return "local/" + str(uuid.uuid4()) + "." + ext
+	return "local/" + extra + str(uuid.uuid4()) + "." + ext
 
 def generate_new_crt(csr):
 	print("Generating CRT for " + csr.csrfile.name)
@@ -24,19 +27,19 @@ def generate_new_crt(csr):
 		fp.write("")
 	return path
 
-def generate_new_ca(name):
-	keypath = settings.MEDIA_ROOT + "local/ca/" + name.replace(' ', '_') + ".key"
-	crtpath = settings.MEDIA_ROOT + "local/ca/" + name.replace(' ', '_') + ".crt"
-	
-	print(keypath)
-	print(crtpath)
-
-	with open(keypath, "w") as fp:
+def generate_new_ca_key():
+	path = settings.MEDIA_ROOT + get_uuid_local_path(None, "dummy.key", extra="ca/")
+	print("NEW CA KEY AT " + path)
+	with open(path, "w") as fp:
 		fp.write("")
-	with open(crtpath, "w") as fp:
-		fp.write("")
+	return path
 
-	return {"key":keypath, "crt":crtpath}
+def generate_new_ca_crt(key):
+	path = settings.MEDIA_ROOT + get_uuid_local_path(None, "dummy.crt", extra="ca/")
+	print("NEW CA CRT AT " + path)
+	with open(path, "w") as fp:
+		fp.write("")
+	return path
 
 
 class CAModel(models.Model):
@@ -44,9 +47,16 @@ class CAModel(models.Model):
 	created = models.DateTimeField(auto_now_add=True)
 
 	name = models.CharField(max_length=100, unique=True)
-	# TODO : These crap out if "settings.MEDIA_ROOT/local/ca/" doesn't exist.
-	keypath = models.FilePathField(verbose_name="Key File", path=settings.MEDIA_ROOT + "local/ca/", match=".*\.key", blank=True, editable=False)
-	crtpath = models.FilePathField(verbose_name="Certificate File", path=settings.MEDIA_ROOT + "local/ca/", match=".*\.crt", blank=True, editable=False)
+	keyfile = models.FileField(	verbose_name="Key File",
+								upload_to=get_uuid_upload_path_ca,
+								validators=[FileExtensionValidator(allowed_extensions=['key'])],
+								blank=True,
+								default=None)
+	crtfile = models.FileField(	verbose_name="Certificate File",
+								upload_to=get_uuid_upload_path_ca,
+								validators=[FileExtensionValidator(allowed_extensions=['crt'])],
+								blank=True,
+								default=None)
 
 	class Meta:
 		ordering = ['created']
@@ -57,10 +67,13 @@ class CAModel(models.Model):
 		return str(self.name)
 
 	def save(self, *args, **kwargs):
-		if self.keypath == "" or self.crtpath == "":
-			cafiles = generate_new_ca(str(self.name))
-			self.keypath = cafiles["key"]
-			self.crtpath = cafiles["crt"]
+		if self.keyfile == None:
+			self.keyfile = generate_new_ca_key()
+			self.crtfile = generate_new_ca_crt(self.keyfile)
+		elif self.crtfile == None:
+			self.crtfile = generate_new_ca_crt(self.keyfile)
+
+		print(type(self.keyfile))
 
 		super().save()
 
@@ -70,7 +83,9 @@ class CSRModel(models.Model):
 	created = models.DateTimeField(auto_now_add=True)
 	owner = models.ForeignKey('auth.User', on_delete=models.CASCADE)
 
-	ca = models.ForeignKey('CAModel', on_delete=models.CASCADE, verbose_name="Certificate Authority")
+	ca = models.ForeignKey(	'CAModel',
+							on_delete=models.CASCADE,
+							verbose_name="Certificate Authority")
 	csrfile = models.FileField(	verbose_name="Certificate Signing Request",
 								upload_to=get_uuid_upload_path,
 								validators=[FileExtensionValidator(allowed_extensions=['csr'])])
@@ -89,9 +104,20 @@ class CRTModel(models.Model):
 	created = models.DateTimeField(auto_now_add=True)
 	owner = models.ForeignKey('auth.User', on_delete=models.CASCADE, editable=False)
 	
-	csr = models.ForeignKey('CSRModel', on_delete=models.CASCADE, verbose_name="Certificate Signing Request")
+	ca = models.ForeignKey(	'CAModel',
+							on_delete=models.CASCADE,
+							verbose_name="Certificate Authority",
+							blank=True,
+							editable=False)
+	csr = models.ForeignKey(	'CSRModel',
+								on_delete=models.CASCADE,
+								verbose_name="Certificate Signing Request")
 	# TODO : This craps out if "settings.MEDIA_ROOT/local/" doesn't exist.
-	crtfilepath = models.FilePathField(verbose_name="Certificate File", path=settings.MEDIA_ROOT + "local/", match=".*\.crt", blank=True, editable=False)
+	crtfilepath = models.FilePathField(	verbose_name="Certificate File",
+										path=settings.MEDIA_ROOT + "local/",
+										match=".*\.crt",
+										blank=True,
+										editable=False)
 
 	class Meta:
 		ordering = ['created']
@@ -103,7 +129,8 @@ class CRTModel(models.Model):
 
 	def save(self, *args, **kwargs):
 		self.owner = self.csr.owner
-		
+		self.ca = self.csr.ca
+
 		if self.crtfilepath == "":
 			self.crtfilepath = generate_new_crt(self.csr)
 
@@ -112,8 +139,9 @@ class CRTModel(models.Model):
 
 @receiver(post_delete, sender=CAModel)
 def CAModel_post_delete(sender, instance, **kwargs):
-	os.remove(instance.keypath)
-	os.remove(instance.crtpath)
+	print("DELETING CA FILES")
+	instance.keyfile.delete(False)
+	instance.crtfile.delete(False)
 
 @receiver(post_delete, sender=CSRModel)
 def CSRModel_post_delete(sender, instance, **kwargs):
