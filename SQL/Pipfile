@@ -8,6 +8,7 @@ verify_ssl = true
 [packages]
 mysql-connector-python = "*"
 matplotlib = "*"
+mysql = "*"
 
 [requires]
 python_version = "3.6"
