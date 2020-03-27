@@ -47,6 +47,8 @@ This repository is for all things related to my RPi based home network. The aim 
 * [Networking](#networking)
   * [Setting up DNSMasq](#setting-up-dnsmasq)
   * [Configuring the RPi Network](#configuring-the-rpi-network)
+* [Issues](#issues)
+  * [Mosquitto Service Start-on-Boot Failure](#mosquitto-service-start-on-boot-failure)
 * [Useful Commands](#useful-commands)
     
 ## RPi Setup
@@ -737,6 +739,53 @@ $ ifconfig
 On the DNSMasq server, the leased IP Addresses can be viewed by running the following.
 ```
 $ cat /var/lib/misc/dnsmasq.leases
+```
+
+## Issues
+### Mosquitto Service Start-on-Boot Failure
+Started seeing issues where `mosquitto.service` wouldn't start on boot. Running `sudo systemctl status mosquitto.service` after boot would show the below.
+```
+● mosquitto.service - Mosquitto MQTT v3.1/v3.1.1 Broker
+   Loaded: loaded (/lib/systemd/system/mosquitto.service; enabled; vendor preset: enabled)
+   Active: failed (Result: exit-code) since Fri 2020-03-27 16:20:35 GMT; 6min ago
+     Docs: man:mosquitto.conf(5)
+           man:mosquitto(8)
+  Process: 539 ExecStart=/usr/sbin/mosquitto -c /etc/mosquitto/mosquitto.conf (code=exited, status=1/FAILURE)
+ Main PID: 539 (code=exited, status=1/FAILURE)
+
+Mar 27 16:20:35 RPI-SRVR1 systemd[1]: mosquitto.service: Service RestartSec=100ms expired, scheduling restart.
+Mar 27 16:20:35 RPI-SRVR1 systemd[1]: mosquitto.service: Scheduled restart job, restart counter is at 5.
+Mar 27 16:20:35 RPI-SRVR1 systemd[1]: Stopped Mosquitto MQTT v3.1/v3.1.1 Broker.
+Mar 27 16:20:35 RPI-SRVR1 systemd[1]: mosquitto.service: Start request repeated too quickly.
+Mar 27 16:20:35 RPI-SRVR1 systemd[1]: mosquitto.service: Failed with result 'exit-code'.
+Mar 27 16:20:35 RPI-SRVR1 systemd[1]: Failed to start Mosquitto MQTT v3.1/v3.1.1 Broker.
+```
+Looking in the log file, */var/log/mosquitto/mosquitto.log*, showed the below.
+```
+1585325101: mosquitto version 1.5.7 starting
+1585325101: Config loaded from /etc/mosquitto/mosquitto.conf.
+1585325101: Opening ipv4 listen socket on port 1883.
+1585325101: Error: Cannot assign requested address
+```
+The wierd thing was that upon running `sudo systemctl restart mosquitto.service` Mosquitto would start successfully. I still don't know exactly what causes this, but reading online seemed to suggest that there are missing dependancies for the mosquitto service that can result in issues starting it on boot. To fix this, I did some research into delaying the starting of a service on boot and came across [this post](https://community.openenergymonitor.org/t/mosquitto-startup-issues/7386).
+
+`Systemd` loads services from 3 key locations in a strict order as below:
+1. */etc/systemd/system/*
+2. */run/systemd/system/*
+3. */lib/systemd/system/*
+`mosquitto.service` runs from */lib/systemd/system/* by default, so we can override it by creating a new Unit File in */etc/systemd/system/*.
+```
+$ sudo cp /lib/systemd/system/mosquitto.service /etc/systemd/system/
+```
+Then modifying to delay for 30s before starting the service by adding the below line.
+```
+[Service]
+ExecStartPre=/bin/sleep 30
+```
+Finally the service must be disabled and re-enabled for the new Unit File to be used.
+```
+$ sudo systemctl disable mosquitto.service
+$ sudo systemctl enable mosquitto.service
 ```
 
 ## Useful Commands
