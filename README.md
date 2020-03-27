@@ -699,13 +699,18 @@ domain=***
 ```
 `domain-needed` prevents DNSMasq from forwarding requests to upstream servers, if they are defined, unless they have a domain part. `bogus-priv` prevents DNSMasq from forwarding Reverse-Lookups with local IP ranges to upstream servers. `no-resolv` makes DNSMasq only use servers from it's config file, rather than reading them from */etc/resolv.conf*. `interface=eth0` tells DNSMasq to only operate on the **eth0** interface. `expand-hosts` makes DNSMasq automatically append the **local domain** to any lookup hosts that don't have a domain part. `domain=***` sets the local domain name handled by DNSMasq.
 
-Enabling the DHCP part of DNSMasq is as simple as specifying the range it should operate in bay adding the following option to the */etc/dnsmasq.conf* file.
+Enabling the DHCP part of DNSMasq is as simple as specifying the range it should operate in by adding the following option to the */etc/dnsmasq.conf* file.
 ```
 dhcp-range=***.***.***.***,***.***.***.***
 ```
 If you have hosts on the network that require a specific IP Address you can configure DNSMasq to provide them using the following option.
 ```
 dhcp-host=<hostname>,***.***.***.***
+```
+The following options can be defined to overwrite the default Router and DNS Server Address reported to DHCP Clients. The defaults are the same host that is running the DNSMasq server.
+```
+dhcp-option=option:router,***.***.***.***
+dhcp-option=option:dns-server,***.***.***.***
 ```
 Finally, the DNSMasq service must be restarted using `sudo systemctl restart dnsmasq.service`.
 ### Configuring the RPi Network
@@ -721,7 +726,6 @@ profile static_eth0
 static ip_address=***.***.***.***
 
 interface eth0
-static domain_name_servers=***.***.***.***
 fallback static_eth0
 ```
 After making these changes each RPi will need rebooting. Start with the DHCP/DNS server and ensure it is fully up and running before restarting any of the others.
