@@ -44,6 +44,9 @@ This repository is for all things related to my RPi based home network. The aim 
 * [ESP32 Boards](#esp32-boards)
   * [Setting up Arduino IDE](#setting-up-arduino-ide)
   * [Installing MQTT Client Library](#installing-mqtt-client-library)
+* [Networking](#networking)
+  * [Setting up DNSMasq](#setting-up-dnsmasq)
+  * [Configuring the RPi Network](#configuring-the-rpi-network)
 * [Useful Commands](#useful-commands)
     
 ## RPi Setup
@@ -676,6 +679,60 @@ $ sudo python -m pip install pyserial
 For this project I will be using the [PubSubClient library](https://github.com/knolleary/pubsubclient) by Knolleary. To install, download the *.zip* from GitHub. This then needs to be extracted to your Arduino installations library folder. For a Linux install this is likely to be something like `~/Documents/Arduino/Library`. Once this has been completed you should be able to access the library by adding the below to the top of your source file.
 ```
 #include <PubSubClient.h>
+```
+
+## Networking
+Each RPi is connected to a dedicated Ethernet Switch. To manage this network, I want to set one RPi up as a DHCP and DNS server. This RPi may also act as a gateway from the local Ethernet network to the wider WiFi network.
+### Setting up DNSMasq
+DNSMasq is a service that can be used to provide a local DHCP/DNS server. This service can be installed using the below.
+```
+$ sudo apt-get install dnsmasq
+```
+To configure the DNS component of DNSMasq I defined the following options in */etc/dnsmasq.conf*.
+```
+domain-needed
+bogus-priv
+no-resolv
+interface=eth0
+expand-hosts
+domain=***
+```
+`domain-needed` prevents DNSMasq from forwarding requests to upstream servers, if they are defined, unless they have a domain part. `bogus-priv` prevents DNSMasq from forwarding Reverse-Lookups with local IP ranges to upstream servers. `no-resolv` makes DNSMasq only use servers from it's config file, rather than reading them from */etc/resolv.conf*. `interface=eth0` tells DNSMasq to only operate on the **eth0** interface. `expand-hosts` makes DNSMasq automatically append the **local domain** to any lookup hosts that don't have a domain part. `domain=***` sets the local domain name handled by DNSMasq.
+
+Enabling the DHCP part of DNSMasq is as simple as specifying the range it should operate in bay adding the following option to the */etc/dnsmasq.conf* file.
+```
+dhcp-range=***.***.***.***,***.***.***.***
+```
+If you have hosts on the network that require a specific IP Address you can configure DNSMasq to provide them using the following option.
+```
+dhcp-host=<hostname>,***.***.***.***
+```
+Finally, the DNSMasq service must be restarted using `sudo systemctl restart dnsmasq.service`.
+### Configuring the RPi Network
+The RPi running the DHCP/DNS service must be configured to use a **static IP Address** on the managed interface, in this case `eth0`. To do this I configured it's */etc/dhcpcd.conf* file to include the below.
+```
+interface eth0
+static ip_address=***.***.***.***
+```
+
+All other RPis on the network can be configured to use DHCP. I configured mine as below to have a static IP fallback if the DHCP server fails.
+```
+profile static_eth0
+static ip_address=***.***.***.***
+
+interface eth0
+static domain_name_servers=***.***.***.***
+fallback static_eth0
+```
+After making these changes each RPi will need rebooting. Start with the DHCP/DNS server and ensure it is fully up and running before restarting any of the others.
+
+Once up and running, each RPi should report either a IP Address in `dhcp-range` or the specified `dhcp-host` address if applicable. The RPis IP Address can be checked using:
+```
+$ ifconfig
+```
+On the DNSMasq server, the leased IP Addresses can be viewed by running the following.
+```
+$ cat /var/lib/misc/dnsmasq.leases
 ```
 
 ## Useful Commands
