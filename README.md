@@ -742,6 +742,8 @@ $ cat /var/lib/misc/dnsmasq.leases
 ```
 
 ## Issues
+### Node-Red TLS Drop-Out
+Had issue where Node-Red would give a "Failed to Deploy" error when attempting to deply changes. Seemed to only be following editing a Function Node. Only way to fix would be to reload the page. Chrome would then give another untrusted page warning, due to the CA being my own "untrusted" CA. As of yet, haven't been able to resolve the issue, had to disable TLS to continue.
 ### Mosquitto Service Start-on-Boot Failure
 Started seeing issues where `mosquitto.service` wouldn't start on boot. Running `sudo systemctl status mosquitto.service` after boot would show the below.
 ```
