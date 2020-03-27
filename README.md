@@ -773,6 +773,7 @@ The wierd thing was that upon running `sudo systemctl restart mosquitto.service`
 1. */etc/systemd/system/*
 2. */run/systemd/system/*
 3. */lib/systemd/system/*
+
 `mosquitto.service` runs from */lib/systemd/system/* by default, so we can override it by creating a new Unit File in */etc/systemd/system/*.
 ```
 $ sudo cp /lib/systemd/system/mosquitto.service /etc/systemd/system/
