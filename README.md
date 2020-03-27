@@ -48,6 +48,7 @@ This repository is for all things related to my RPi based home network. The aim 
   * [Setting up DNSMasq](#setting-up-dnsmasq)
   * [Configuring the RPi Network](#configuring-the-rpi-network)
 * [Issues](#issues)
+  * [Node-Red TLS Drop-Out](#node-red-tls-drop-out)
   * [Mosquitto Service Start-on-Boot Failure](#mosquitto-service-start-on-boot-failure)
 * [Useful Commands](#useful-commands)
     
