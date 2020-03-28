@@ -742,6 +742,36 @@ On the DNSMasq server, the leased IP Addresses can be viewed by running the foll
 $ cat /var/lib/misc/dnsmasq.leases
 ```
 
+## Samba File Server
+### Installing Samba
+Samba is installed simply by running the below.
+```
+$ sudo apt-get install samba samba-common-bin
+```
+The service is automatically started when installed and so you should be able to see the *print* network share on other systems connected to the same network. 
+My Samba shares will be hosted from a partition on an external hard drive connected to one of my RPis over USB. This partition needs to be created and setup, similaraly to the partition created to host the [MariaDB database](#changing-database-storage-location).
+### Creating a Public Share
+As part of my setup, I have a *Public* share that can be accessed by anyone without any credentials. This obviously has some security implications, so it is important to ensure that things like creation masks and user priviledges are set accordingly.
+
+Firstly, create a user that will have very limited system priviledges. This user will essentially only be able to Read and Write to the specific *Public* share folder. The user can be added using the below.
+```
+$ sudo adduser samba_guest
+$ sudo usermod -a -G sambashare samba_guest
+```
+Now we need to configure the Samba Share definition. This is done in the */etc/samba/smb.conf* configuration file. I defined my share as below.
+```
+[Public]
+path = /mnt/nas_store/samba/public
+force user = samba_guest
+force group = sambashare
+writeable = Yes
+create mask = 0644
+directory mask = 0775
+public = Yes
+guest ok = Yes
+```
+The `path` option spcifies the directory to use for the share. `force user` causes Samba to use the specified user for any system operations, similarily `force group` specifies the group to use. `writeable` means clients can write to the share. The `create mask` is applied to any created files permissions, and the `directory mask` is applied to any created directories permissions. `public` and `guest ok` allow users to access the share without loging in. 
+
 ## Issues
 ### Node-Red TLS Drop-Out
 Had issue where Node-Red would give a "Failed to Deploy" error when attempting to deply changes. Seemed to only be following editing a Function Node. Only way to fix would be to reload the page. Chrome would then give another untrusted page warning, due to the CA being my own "untrusted" CA. As of yet, haven't been able to resolve the issue, had to disable TLS to continue.
