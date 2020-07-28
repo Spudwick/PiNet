@@ -50,6 +50,7 @@ This repository is for all things related to my RPi based home network. The aim 
 * [Samba File Server](#samba-file-server)
   * [Installing Samba](#installing-samba)
   * [Creating a Public Share](#creating-a-public-share)
+  * [Adding a Samba User](#adding-a-samba-user)
 * [Issues](#issues)
   * [Node-Red TLS Drop-Out](#node-red-tls-drop-out)
   * [Mosquitto Service Start-on-Boot Failure](#mosquitto-service-start-on-boot-failure)
@@ -774,6 +775,14 @@ public = Yes
 guest ok = Yes
 ```
 The `path` option spcifies the directory to use for the share. `force user` causes Samba to use the specified user for any system operations, similarily `force group` specifies the group to use. `writeable` means clients can write to the share. The `create mask` is applied to any created files permissions, and the `directory mask` is applied to any created directories permissions. `public` and `guest ok` allow users to access the share without loging in. 
+### Adding a Samba User
+To access private shares, a user is required. The user must exist natively on the host system, aswell as within the Samba domain. This allows us to use native Linux file/folder ownership and permissions to ensure a user only has access to the things we want them too.
+A new user can be added to Linux, then rigistered with the Samba system using the following commands.
+```
+$ sudo adduser <username>
+$ sudo smbpasswd -a <username>
+```
+Once the user is added the Samba service must be restarted using `systemctl restart smbd.service` for the user to be available.
 
 ## Issues
 ### Node-Red TLS Drop-Out
