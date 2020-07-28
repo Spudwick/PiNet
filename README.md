@@ -780,6 +780,7 @@ To access private shares, a user is required. The user must exist natively on th
 A new user can be added to Linux, then rigistered with the Samba system using the following commands.
 ```
 $ sudo adduser <username>
+$ sudo usermod -a -G sambashare <username>
 $ sudo smbpasswd -a <username>
 ```
 Once the user is added the Samba service must be restarted using `systemctl restart smbd.service` for the user to be available.
