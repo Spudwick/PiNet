@@ -1,0 +1,25 @@
+services:
+    portainer:
+        image: 'portainer/portainer:latest'
+        restart: unless-stopped
+        ports:
+            - '9000:9000'
+        volumes:
+            - '/var/run/docker.sock:/var/run/docker.sock'
+            - 'portainer_data:/data'
+
+    gitlab:
+        context: ./gitlab
+        restart: unless-stopped
+        hostname: 'gitlab.pinet'
+        ports:
+            - '80:80'
+            - '443:443'
+            - '22:22'
+        volumes:
+            - '/home/pi/docker/gitlab/config:/etc/gitlab'
+            - '/home/pi/docker/gitlab/logs:/var/log/gitlab'
+            - '/home/pi/docker/gitlab/data:/var/opt/gitlab'
+
+volumes:
+    portainer_data:
