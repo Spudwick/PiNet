@@ -110,3 +110,5 @@ migrations/
 *.crt
 *.pem
 *.key
+
+!RPI-DCKR/.env

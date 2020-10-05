@@ -17,9 +17,9 @@ services:
             - '443:443'
             - '22:22'
         volumes:
-            - '/home/pi/docker/gitlab/config:/etc/gitlab'
-            - '/home/pi/docker/gitlab/logs:/var/log/gitlab'
-            - '/home/pi/docker/gitlab/data:/var/opt/gitlab'
+            - '${GITLAB_ROOT_DIR}/config:/etc/gitlab'
+            - '${GITLAB_ROOT_DIR}/logs:/var/log/gitlab'
+            - '${GITLAB_ROOT_DIR}/data:/var/opt/gitlab'
 
 volumes:
     portainer_data:
